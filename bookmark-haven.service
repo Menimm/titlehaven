@@ -1,0 +1,18 @@
+
+[Unit]
+Description=Bookmark Haven web application
+After=network.target
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+WorkingDirectory=/path/to/your/bookmark-haven
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=bookmark-haven
+
+[Install]
+WantedBy=multi-user.target
