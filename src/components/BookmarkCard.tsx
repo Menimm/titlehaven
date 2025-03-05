@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Bookmark } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Copy, ExternalLink, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Copy, ExternalLink, MoreHorizontal, Pencil, Trash2, Link } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -13,9 +13,10 @@ interface BookmarkCardProps {
   bookmark: Bookmark;
   onEdit: (bookmark: Bookmark) => void;
   onDelete: (id: string) => void;
+  onToggleShowUrl: (id: string, value: boolean) => void;
 }
 
-const BookmarkCard: React.FC<BookmarkCardProps> = ({ bookmark, onEdit, onDelete }) => {
+const BookmarkCard: React.FC<BookmarkCardProps> = ({ bookmark, onEdit, onDelete, onToggleShowUrl }) => {
   const [isHovering, setIsHovering] = useState(false);
   
   const handleCopyLink = () => {
@@ -34,6 +35,10 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({ bookmark, onEdit, onDelete 
     } catch {
       return null;
     }
+  };
+
+  const handleToggleShowUrl = () => {
+    onToggleShowUrl(bookmark.id, !bookmark.showFullUrl);
   };
 
   return (
@@ -81,6 +86,12 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({ bookmark, onEdit, onDelete 
                 <Copy className="h-4 w-4 mr-2" />
                 Copy Link
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleToggleShowUrl}>
+                <Link className="h-4 w-4 mr-2" />
+                {bookmark.showFullUrl ? "Hide Full URL" : "Show Full URL"}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={() => onDelete(bookmark.id)}
                 className="text-destructive focus:text-destructive"
@@ -104,9 +115,15 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({ bookmark, onEdit, onDelete 
             </p>
           )}
           
-          <div className="text-xs text-muted-foreground truncate">
-            {bookmark.url.replace(/^https?:\/\//i, '')}
-          </div>
+          {bookmark.showFullUrl ? (
+            <div className="text-xs text-muted-foreground break-all bg-muted p-2 rounded mt-2 mb-2">
+              {bookmark.url}
+            </div>
+          ) : (
+            <div className="text-xs text-muted-foreground truncate">
+              {bookmark.url.replace(/^https?:\/\//i, '')}
+            </div>
+          )}
         </div>
         
         <div className={cn(

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import BookmarkForm from '@/components/BookmarkForm';
@@ -78,6 +77,7 @@ const Index = () => {
           ? { 
               ...b, 
               ...bookmarkData, 
+              showFullUrl: b.showFullUrl,
               favicon: getFaviconForUrl(bookmarkData.url)
             } 
           : b
@@ -89,7 +89,8 @@ const Index = () => {
         id: generateId(),
         ...bookmarkData,
         favicon: getFaviconForUrl(bookmarkData.url),
-        createdAt: new Date()
+        createdAt: new Date(),
+        showFullUrl: false
       };
       setBookmarks([...bookmarks, newBookmark]);
       toast.success('Bookmark added successfully');
@@ -115,6 +116,13 @@ const Index = () => {
     const newCategory = { id: generateId(), name };
     setCategories([...categories, newCategory]);
     return newCategory.id;
+  };
+
+  const handleToggleShowUrl = (id: string, value: boolean) => {
+    setBookmarks(bookmarks.map(b => 
+      b.id === id ? { ...b, showFullUrl: value } : b
+    ));
+    toast.success(value ? 'Showing full URL' : 'Hiding full URL');
   };
   
   // Helper functions
@@ -175,6 +183,7 @@ const Index = () => {
             bookmarks={sortedBookmarks}
             onEditBookmark={handleEditBookmark}
             onDeleteBookmark={handleDeleteBookmark}
+            onToggleShowUrl={handleToggleShowUrl}
             className="mt-8"
           />
         )}

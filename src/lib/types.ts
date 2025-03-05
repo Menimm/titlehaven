@@ -7,6 +7,7 @@ export interface Bookmark {
   category: string;
   favicon?: string;
   createdAt: Date;
+  showFullUrl?: boolean;
 }
 
 export interface Category {
