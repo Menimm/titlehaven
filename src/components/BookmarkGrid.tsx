@@ -8,6 +8,7 @@ interface BookmarkGridProps {
   bookmarks: Bookmark[];
   onEditBookmark: (bookmark: Bookmark) => void;
   onDeleteBookmark: (id: string) => void;
+  onToggleShowUrl: (id: string, value: boolean) => void;
   className?: string;
 }
 
@@ -15,6 +16,7 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
   bookmarks, 
   onEditBookmark, 
   onDeleteBookmark,
+  onToggleShowUrl,
   className 
 }) => {
   // Group bookmarks by category
@@ -42,6 +44,7 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
                 bookmark={bookmark}
                 onEdit={onEditBookmark}
                 onDelete={onDeleteBookmark}
+                onToggleShowUrl={onToggleShowUrl}
               />
             ))}
           </div>
