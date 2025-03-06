@@ -10,6 +10,7 @@ import { useBookmarks } from '@/hooks/useBookmarks';
 import { useCategories } from '@/hooks/useCategories';
 import { useSearch } from '@/hooks/useSearch';
 import { useBookmarkForm } from '@/hooks/useBookmarkForm';
+import { useAppSettings } from '@/hooks/useAppSettings';
 import { Bookmark } from '@/lib/types';
 
 const Index = () => {
@@ -49,6 +50,8 @@ const Index = () => {
     isLoading 
   } = useSearch(bookmarks);
 
+  const { settings } = useAppSettings();
+
   // Toggle between grid and list view
   const handleToggleViewMode = () => {
     const newMode = viewMode === 'grid' ? 'list' : 'grid';
@@ -87,7 +90,13 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div 
+      className="min-h-screen flex flex-col"
+      style={{ 
+        backgroundColor: settings?.backgroundColor || 'var(--background)',
+        color: settings?.backgroundColor ? 'inherit' : 'var(--foreground)'
+      }}
+    >
       <Header 
         onAddBookmark={handleAddBookmark}
         bookmarkCount={filteredBookmarks.length}

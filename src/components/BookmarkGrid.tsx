@@ -44,6 +44,12 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
     return category ? category.name : categoryId;
   };
 
+  // Function to get category color from id
+  const getCategoryColor = (categoryId: string) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category?.color || '';
+  };
+
   // Function to check if a category is visible
   const isCategoryVisible = (categoryId: string) => {
     const category = categories.find(cat => cat.id === categoryId);
@@ -82,105 +88,113 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
         </div>
       )}
       
-      {visibleCategoryIds.map((categoryId) => (
-        <section key={categoryId} className="animate-fade-in border rounded-lg p-4">
-          <div 
-            className="flex items-center cursor-pointer" 
-            onClick={() => toggleSection(categoryId)}
+      {visibleCategoryIds.map((categoryId) => {
+        const categoryColor = getCategoryColor(categoryId);
+        
+        return (
+          <section 
+            key={categoryId} 
+            className="animate-fade-in border rounded-lg p-4"
+            style={{ backgroundColor: categoryColor || '' }}
           >
-            <Button
-              variant="ghost"
-              size="sm"
-              className="p-1 mr-2 h-8 w-8"
-              aria-label={expandedSections[categoryId] ? "Collapse section" : "Expand section"}
+            <div 
+              className="flex items-center cursor-pointer" 
+              onClick={() => toggleSection(categoryId)}
             >
-              {expandedSections[categoryId] ? 
-                <ChevronUp className="h-5 w-5" /> : 
-                <ChevronDown className="h-5 w-5" />
-              }
-            </Button>
-            <h2 className="text-xl font-semibold">{getCategoryName(categoryId)}</h2>
-            <span className="ml-2 text-sm text-muted-foreground">
-              ({groupedBookmarks[categoryId].length})
-            </span>
-          </div>
-          
-          {expandedSections[categoryId] && (
-            viewMode === 'grid' ? (
-              <div 
-                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 animate-accordion-down"
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-1 mr-2 h-8 w-8"
+                aria-label={expandedSections[categoryId] ? "Collapse section" : "Expand section"}
               >
-                {groupedBookmarks[categoryId].map((bookmark) => (
-                  <BookmarkCard
-                    key={bookmark.id}
-                    bookmark={bookmark}
-                    onEdit={() => onEditBookmark(bookmark)}
-                    onDelete={() => onDeleteBookmark(bookmark)}
-                    onToggleShowUrl={() => onToggleShowUrl(bookmark)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="mt-4 space-y-2 animate-accordion-down">
-                {groupedBookmarks[categoryId].map((bookmark) => (
-                  <div 
-                    key={bookmark.id}
-                    className="flex items-center justify-between p-3 rounded-md border bg-card hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      {bookmark.favicon && (
-                        <img 
-                          src={bookmark.favicon} 
-                          alt="" 
-                          className="w-5 h-5 flex-shrink-0"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium truncate">{bookmark.title}</h3>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {bookmark.showFullUrl ? bookmark.url : new URL(bookmark.url).hostname}
-                        </p>
+                {expandedSections[categoryId] ? 
+                  <ChevronUp className="h-5 w-5" /> : 
+                  <ChevronDown className="h-5 w-5" />
+                }
+              </Button>
+              <h2 className="text-xl font-semibold">{getCategoryName(categoryId)}</h2>
+              <span className="ml-2 text-sm text-muted-foreground">
+                ({groupedBookmarks[categoryId].length})
+              </span>
+            </div>
+            
+            {expandedSections[categoryId] && (
+              viewMode === 'grid' ? (
+                <div 
+                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 animate-accordion-down"
+                >
+                  {groupedBookmarks[categoryId].map((bookmark) => (
+                    <BookmarkCard
+                      key={bookmark.id}
+                      bookmark={bookmark}
+                      onEdit={() => onEditBookmark(bookmark)}
+                      onDelete={() => onDeleteBookmark(bookmark)}
+                      onToggleShowUrl={() => onToggleShowUrl(bookmark)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-4 space-y-2 animate-accordion-down">
+                  {groupedBookmarks[categoryId].map((bookmark) => (
+                    <div 
+                      key={bookmark.id}
+                      className="flex items-center justify-between p-3 rounded-md border bg-card hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {bookmark.favicon && (
+                          <img 
+                            src={bookmark.favicon} 
+                            alt="" 
+                            className="w-5 h-5 flex-shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium truncate">{bookmark.title}</h3>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {bookmark.showFullUrl ? bookmark.url : new URL(bookmark.url).hostname}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => onToggleShowUrl(bookmark)}
+                          title={bookmark.showFullUrl ? "Hide full URL" : "Show full URL"}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => onEditBookmark(bookmark)}
+                          title="Edit bookmark"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          onClick={() => onDeleteBookmark(bookmark)}
+                          title="Delete bookmark"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => onToggleShowUrl(bookmark)}
-                        title={bookmark.showFullUrl ? "Hide full URL" : "Show full URL"}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => onEditBookmark(bookmark)}
-                        title="Edit bookmark"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                        onClick={() => onDeleteBookmark(bookmark)}
-                        title="Delete bookmark"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )
-          )}
-        </section>
-      ))}
+                  ))}
+                </div>
+              )
+            )}
+          </section>
+        );
+      })}
     </div>
   );
 };

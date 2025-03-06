@@ -15,7 +15,8 @@ export const useCategories = () => {
         return parsed.map((cat: Category, index: number) => ({
           ...cat,
           order: cat.order !== undefined ? cat.order : index,
-          visible: cat.visible !== undefined ? cat.visible : true
+          visible: cat.visible !== undefined ? cat.visible : true,
+          color: cat.color || undefined
         }));
       } catch (e) {
         console.error('Failed to parse categories from localStorage', e);
@@ -54,6 +55,12 @@ export const useCategories = () => {
     ));
   };
 
+  const setCategoryColor = (id: string, color: string) => {
+    setCategories(categories.map(cat => 
+      cat.id === id ? { ...cat, color } : cat
+    ));
+  };
+
   const reorderCategories = (newOrder: Category[]) => {
     setCategories(newOrder);
   };
@@ -63,6 +70,7 @@ export const useCategories = () => {
     addCategory,
     updateCategory,
     toggleCategoryVisibility,
+    setCategoryColor,
     reorderCategories
   };
 };
