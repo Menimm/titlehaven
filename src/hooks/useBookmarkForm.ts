@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bookmark } from '@/lib/types';
 
 export const useBookmarkForm = () => {
