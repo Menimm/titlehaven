@@ -13,4 +13,6 @@ export interface Bookmark {
 export interface Category {
   id: string;
   name: string;
+  order?: number; // For drag and drop ordering
+  visible?: boolean; // For show/hide functionality
 }

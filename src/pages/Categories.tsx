@@ -6,38 +6,29 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Category } from '@/lib/types';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
-import { Edit, Trash2, ArrowLeft, Plus } from 'lucide-react';
+import { Edit, Trash2, ArrowLeft, Plus, GripVertical, Eye, EyeOff } from 'lucide-react';
+import { useCategories } from '@/hooks/useCategories';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const Categories = () => {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<Category[]>(() => {
-    const saved = localStorage.getItem('categories');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse categories from localStorage', e);
-        return [{ id: 'default', name: 'General' }];
-      }
-    }
-    return [{ id: 'default', name: 'General' }];
-  });
+  const { 
+    categories, 
+    addCategory, 
+    updateCategory, 
+    toggleCategoryVisibility, 
+    reorderCategories 
+  } = useCategories();
 
   const [newCategory, setNewCategory] = useState('');
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
-  const saveCategories = (updatedCategories: Category[]) => {
-    setCategories(updatedCategories);
-    localStorage.setItem('categories', JSON.stringify(updatedCategories));
-  };
-
   const handleAddCategory = () => {
     if (!newCategory.trim()) return;
     
-    const id = Math.random().toString(36).substring(2, 9);
-    const updatedCategories = [...categories, { id, name: newCategory.trim() }];
-    saveCategories(updatedCategories);
+    addCategory(newCategory.trim());
     setNewCategory('');
     toast.success('Category added');
   };
@@ -45,10 +36,7 @@ const Categories = () => {
   const handleUpdateCategory = () => {
     if (!editingCategory || !editingCategory.name.trim()) return;
     
-    const updatedCategories = categories.map(cat => 
-      cat.id === editingCategory.id ? editingCategory : cat
-    );
-    saveCategories(updatedCategories);
+    updateCategory(editingCategory.id, editingCategory.name);
     setEditingCategory(null);
     toast.success('Category updated');
   };
@@ -77,9 +65,31 @@ const Categories = () => {
     }
     
     const updatedCategories = categories.filter(cat => cat.id !== categoryToDelete.id);
-    saveCategories(updatedCategories);
+    reorderCategories(updatedCategories);
     setCategoryToDelete(null);
     toast.success('Category deleted');
+  };
+
+  const handleToggleVisibility = (category: Category) => {
+    toggleCategoryVisibility(category.id);
+    toast.success(`Category ${category.visible ? 'hidden' : 'shown'}`);
+  };
+
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+    
+    const items = Array.from(categories);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    // Update order property for all items
+    const updatedItems = items.map((item, index) => ({
+      ...item,
+      order: index
+    }));
+    
+    reorderCategories(updatedItems);
+    toast.success('Categories reordered');
   };
 
   return (
@@ -118,41 +128,96 @@ const Categories = () => {
       
       <div className="bg-card rounded-lg border shadow p-6">
         <h2 className="text-xl font-semibold mb-4">Your Categories</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Drag and drop to reorder categories. Use the visibility toggle to show/hide categories.
+        </p>
         {categories.length === 0 ? (
           <p className="text-muted-foreground">No categories found.</p>
         ) : (
-          <div className="space-y-2">
-            {categories.map((category) => (
-              <div 
-                key={category.id} 
-                className="flex items-center justify-between p-3 rounded-md border bg-background"
-              >
-                <span className="font-medium">{category.name}</span>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setEditingCategory(category)}
-                    disabled={category.id === 'default'}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Edit className="h-4 w-4" />
-                    <span className="sr-only">Edit</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCategoryToDelete(category)}
-                    disabled={category.id === 'default'}
-                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Delete</span>
-                  </Button>
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="categories">
+              {(provided) => (
+                <div 
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="space-y-2"
+                >
+                  {categories.map((category, index) => (
+                    <Draggable 
+                      key={category.id} 
+                      draggableId={category.id} 
+                      index={index}
+                    >
+                      {(provided) => (
+                        <div 
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className="flex items-center justify-between p-3 rounded-md border bg-background"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div 
+                              {...provided.dragHandleProps}
+                              className="cursor-grab"
+                            >
+                              <GripVertical className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                            <span className="font-medium">{category.name}</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <Checkbox 
+                                id={`visibility-${category.id}`}
+                                checked={category.visible}
+                                onCheckedChange={() => handleToggleVisibility(category)}
+                              />
+                              <label 
+                                htmlFor={`visibility-${category.id}`}
+                                className="text-sm cursor-pointer"
+                              >
+                                {category.visible ? (
+                                  <span className="flex items-center gap-1">
+                                    <Eye className="h-4 w-4" />
+                                    Visible
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-1 text-muted-foreground">
+                                    <EyeOff className="h-4 w-4" />
+                                    Hidden
+                                  </span>
+                                )}
+                              </label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setEditingCategory(category)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit className="h-4 w-4" />
+                                <span className="sr-only">Edit</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setCategoryToDelete(category)}
+                                disabled={categories.length <= 1}
+                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Delete</span>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
                 </div>
-              </div>
-            ))}
-          </div>
+              )}
+            </Droppable>
+          </DragDropContext>
         )}
       </div>
 

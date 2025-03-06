@@ -10,13 +10,19 @@ export const useCategories = () => {
     const saved = localStorage.getItem('categories');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Ensure all categories have the required properties
+        return parsed.map((cat: Category, index: number) => ({
+          ...cat,
+          order: cat.order !== undefined ? cat.order : index,
+          visible: cat.visible !== undefined ? cat.visible : true
+        }));
       } catch (e) {
         console.error('Failed to parse categories from localStorage', e);
-        return [{ id: 'default', name: 'General' }];
+        return [{ id: 'default', name: 'General', order: 0, visible: true }];
       }
     }
-    return [{ id: 'default', name: 'General' }];
+    return [{ id: 'default', name: 'General', order: 0, visible: true }];
   });
 
   // Save to localStorage whenever data changes
@@ -25,13 +31,38 @@ export const useCategories = () => {
   }, [categories]);
 
   const addCategory = (name: string) => {
-    const newCategory = { id: generateId(), name };
+    const maxOrder = Math.max(...categories.map(cat => cat.order || 0), 0);
+    const newCategory = { 
+      id: generateId(), 
+      name, 
+      order: maxOrder + 1,
+      visible: true 
+    };
     setCategories([...categories, newCategory]);
     return newCategory.id;
   };
 
+  const updateCategory = (id: string, name: string) => {
+    setCategories(categories.map(cat => 
+      cat.id === id ? { ...cat, name } : cat
+    ));
+  };
+
+  const toggleCategoryVisibility = (id: string) => {
+    setCategories(categories.map(cat => 
+      cat.id === id ? { ...cat, visible: !cat.visible } : cat
+    ));
+  };
+
+  const reorderCategories = (newOrder: Category[]) => {
+    setCategories(newOrder);
+  };
+
   return {
     categories,
-    addCategory
+    addCategory,
+    updateCategory,
+    toggleCategoryVisibility,
+    reorderCategories
   };
 };

@@ -10,8 +10,8 @@ import { useFoldableSections } from '@/hooks/useFoldableSections';
 interface BookmarkGridProps {
   bookmarks: Bookmark[];
   onEditBookmark: (bookmark: Bookmark) => void;
-  onDeleteBookmark: (bookmark: Bookmark) => void; // Changed from (id: string)
-  onToggleShowUrl: (bookmark: Bookmark) => void; // Changed from (id: string, value: boolean)
+  onDeleteBookmark: (bookmark: Bookmark) => void;
+  onToggleShowUrl: (bookmark: Bookmark) => void;
   className?: string;
   viewMode: 'grid' | 'list';
   categories?: Category[];
@@ -44,13 +44,22 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
     return category ? category.name : categoryId;
   };
 
+  // Function to check if a category is visible
+  const isCategoryVisible = (categoryId: string) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? category.visible !== false : true;
+  };
+
+  // Filter out hidden categories
+  const visibleCategoryIds = categoryIds.filter(isCategoryVisible);
+
   if (bookmarks.length === 0) {
     return null;
   }
 
   return (
     <div className={cn("space-y-8", className)}>
-      {categoryIds.length > 1 && (
+      {visibleCategoryIds.length > 1 && (
         <div className="flex justify-end space-x-2 mb-4">
           <Button 
             variant="outline" 
@@ -73,7 +82,7 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
         </div>
       )}
       
-      {Object.entries(groupedBookmarks).map(([categoryId, categoryBookmarks]) => (
+      {visibleCategoryIds.map((categoryId) => (
         <section key={categoryId} className="animate-fade-in border rounded-lg p-4">
           <div 
             className="flex items-center cursor-pointer" 
@@ -92,7 +101,7 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
             </Button>
             <h2 className="text-xl font-semibold">{getCategoryName(categoryId)}</h2>
             <span className="ml-2 text-sm text-muted-foreground">
-              ({categoryBookmarks.length})
+              ({groupedBookmarks[categoryId].length})
             </span>
           </div>
           
@@ -101,7 +110,7 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
               <div 
                 className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 animate-accordion-down"
               >
-                {categoryBookmarks.map((bookmark) => (
+                {groupedBookmarks[categoryId].map((bookmark) => (
                   <BookmarkCard
                     key={bookmark.id}
                     bookmark={bookmark}
