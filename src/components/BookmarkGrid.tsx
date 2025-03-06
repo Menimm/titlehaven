@@ -122,7 +122,7 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
               </div>
             ) : (
               <div className="mt-4 space-y-2 animate-accordion-down">
-                {categoryBookmarks.map((bookmark) => (
+                {groupedBookmarks[categoryId].map((bookmark) => (
                   <div 
                     key={bookmark.id}
                     className="flex items-center justify-between p-3 rounded-md border bg-card hover:bg-accent/50 transition-colors"
