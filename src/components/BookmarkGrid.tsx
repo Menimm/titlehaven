@@ -1,7 +1,6 @@
-
 import React from 'react';
 import BookmarkCard from './BookmarkCard';
-import { Bookmark } from '@/lib/types';
+import { Bookmark, Category } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, ExternalLink, Trash2, Edit } from 'lucide-react';
@@ -14,6 +13,7 @@ interface BookmarkGridProps {
   onToggleShowUrl: (id: string, value: boolean) => void;
   className?: string;
   viewMode: 'grid' | 'list';
+  categories?: Category[];
 }
 
 const BookmarkGrid: React.FC<BookmarkGridProps> = ({ 
@@ -22,7 +22,8 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
   onDeleteBookmark,
   onToggleShowUrl,
   className,
-  viewMode
+  viewMode,
+  categories = []
 }) => {
   // Group bookmarks by category
   const groupedBookmarks = bookmarks.reduce<Record<string, Bookmark[]>>((acc, bookmark) => {
@@ -33,8 +34,14 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
     return acc;
   }, {});
 
-  const categories = Object.keys(groupedBookmarks);
-  const { expandedSections, toggleSection, collapseAll, expandAll } = useFoldableSections(categories);
+  const categoryIds = Object.keys(groupedBookmarks);
+  const { expandedSections, toggleSection, collapseAll, expandAll } = useFoldableSections(categoryIds);
+
+  // Function to get category name from id
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? category.name : categoryId;
+  };
 
   if (bookmarks.length === 0) {
     return null;
@@ -42,7 +49,7 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
 
   return (
     <div className={cn("space-y-8", className)}>
-      {categories.length > 1 && (
+      {categoryIds.length > 1 && (
         <div className="flex justify-end space-x-2 mb-4">
           <Button 
             variant="outline" 
@@ -65,30 +72,30 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
         </div>
       )}
       
-      {Object.entries(groupedBookmarks).map(([category, categoryBookmarks]) => (
-        <section key={category} className="animate-fade-in border rounded-lg p-4">
+      {Object.entries(groupedBookmarks).map(([categoryId, categoryBookmarks]) => (
+        <section key={categoryId} className="animate-fade-in border rounded-lg p-4">
           <div 
             className="flex items-center cursor-pointer" 
-            onClick={() => toggleSection(category)}
+            onClick={() => toggleSection(categoryId)}
           >
             <Button
               variant="ghost"
               size="sm"
               className="p-1 mr-2 h-8 w-8"
-              aria-label={expandedSections[category] ? "Collapse section" : "Expand section"}
+              aria-label={expandedSections[categoryId] ? "Collapse section" : "Expand section"}
             >
-              {expandedSections[category] ? 
+              {expandedSections[categoryId] ? 
                 <ChevronUp className="h-5 w-5" /> : 
                 <ChevronDown className="h-5 w-5" />
               }
             </Button>
-            <h2 className="text-xl font-semibold">{category}</h2>
+            <h2 className="text-xl font-semibold">{getCategoryName(categoryId)}</h2>
             <span className="ml-2 text-sm text-muted-foreground">
               ({categoryBookmarks.length})
             </span>
           </div>
           
-          {expandedSections[category] && (
+          {expandedSections[categoryId] && (
             viewMode === 'grid' ? (
               <div 
                 className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 animate-accordion-down"

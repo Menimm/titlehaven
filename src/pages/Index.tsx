@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import BookmarkForm from '@/components/BookmarkForm';
@@ -31,7 +30,7 @@ const Index = () => {
     toggleShowUrl 
   } = useBookmarks();
   
-  const { categories, addCategory } = useCategories();
+  const { categories } = useCategories();
   
   const { 
     isFormOpen, 
@@ -45,11 +44,12 @@ const Index = () => {
     searchTerm, 
     setSearchTerm, 
     filteredBookmarks, 
-    sortedBookmarks 
+    sortedBookmarks, 
+    isLoading 
   } = useSearch(bookmarks);
 
   // Toggle between grid and list view
-  const toggleViewMode = () => {
+  const handleToggleViewMode = () => {
     const newMode = viewMode === 'grid' ? 'list' : 'grid';
     setViewMode(newMode);
     localStorage.setItem('viewMode', newMode);
@@ -65,42 +65,57 @@ const Index = () => {
     closeForm();
   };
 
+  // Handle add bookmark action
+  const handleAddBookmark = () => {
+    openAddForm();
+  };
+
+  // Handle edit bookmark action
+  const handleEditBookmark = (bookmark: Bookmark) => {
+    openEditForm(bookmark);
+  };
+
+  // Handle delete bookmark action
+  const handleDeleteBookmarkIntent = (bookmark: Bookmark) => {
+    deleteBookmark(bookmark);
+  };
+
+  // Handle toggle show URL action
+  const handleToggleShowUrl = (bookmark: Bookmark) => {
+    toggleShowUrl(bookmark);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header 
-        onAddBookmark={openAddForm} 
-        bookmarkCount={bookmarks.length}
+        onAddBookmark={handleAddBookmark}
+        bookmarkCount={filteredBookmarks.length}
         viewMode={viewMode}
-        onToggleViewMode={toggleViewMode}
+        onToggleViewMode={handleToggleViewMode}
       />
       
-      <main className="flex-1 container max-w-7xl px-4 sm:px-6 pb-16">
-        {bookmarks.length > 0 && (
-          <div className="max-w-md mx-auto sm:max-w-none my-6">
-            <SearchBar 
-              value={searchTerm} 
-              onChange={setSearchTerm} 
-            />
-          </div>
-        )}
+      <main className="flex-grow container max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <SearchBar 
+          searchTerm={searchTerm} 
+          onSearchChange={setSearchTerm} 
+          onClearSearch={() => setSearchTerm('')}
+        />
         
-        {bookmarks.length === 0 ? (
-          <EmptyState onAddBookmark={openAddForm} />
-        ) : filteredBookmarks.length === 0 ? (
-          <EmptyState 
-            onAddBookmark={openAddForm} 
-            isSearching={true} 
-            searchTerm={searchTerm}
+        {isLoading ? (
+          <div className="flex justify-center items-center h-full">
+            <p>Loading...</p>
+          </div>
+        ) : filteredBookmarks.length > 0 ? (
+          <BookmarkGrid 
+            bookmarks={filteredBookmarks}
+            onEditBookmark={handleEditBookmark}
+            onDeleteBookmark={handleDeleteBookmarkIntent}
+            onToggleShowUrl={handleToggleShowUrl}
+            viewMode={viewMode}
+            categories={categories}
           />
         ) : (
-          <BookmarkGrid
-            bookmarks={sortedBookmarks}
-            onEditBookmark={openEditForm}
-            onDeleteBookmark={deleteBookmark}
-            onToggleShowUrl={toggleShowUrl}
-            viewMode={viewMode}
-            className="mt-8"
-          />
+          <EmptyState onAddBookmark={handleAddBookmark} />
         )}
       </main>
       
