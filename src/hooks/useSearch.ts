@@ -1,9 +1,10 @@
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Bookmark } from '@/lib/types';
 
 export const useSearch = (bookmarks: Bookmark[]) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Filter bookmarks based on search term
   const filteredBookmarks = useMemo(() => {
@@ -28,10 +29,20 @@ export const useSearch = (bookmarks: Bookmark[]) => {
     });
   }, [filteredBookmarks]);
 
+  // Simulate loading state when search term changes
+  useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   return {
     searchTerm,
     setSearchTerm,
     filteredBookmarks,
-    sortedBookmarks
+    sortedBookmarks,
+    isLoading
   };
 };

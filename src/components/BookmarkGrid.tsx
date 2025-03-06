@@ -1,3 +1,4 @@
+
 import React from 'react';
 import BookmarkCard from './BookmarkCard';
 import { Bookmark, Category } from '@/lib/types';
@@ -9,8 +10,8 @@ import { useFoldableSections } from '@/hooks/useFoldableSections';
 interface BookmarkGridProps {
   bookmarks: Bookmark[];
   onEditBookmark: (bookmark: Bookmark) => void;
-  onDeleteBookmark: (id: string) => void;
-  onToggleShowUrl: (id: string, value: boolean) => void;
+  onDeleteBookmark: (bookmark: Bookmark) => void; // Changed from (id: string)
+  onToggleShowUrl: (bookmark: Bookmark) => void; // Changed from (id: string, value: boolean)
   className?: string;
   viewMode: 'grid' | 'list';
   categories?: Category[];
@@ -104,9 +105,9 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
                   <BookmarkCard
                     key={bookmark.id}
                     bookmark={bookmark}
-                    onEdit={onEditBookmark}
-                    onDelete={onDeleteBookmark}
-                    onToggleShowUrl={onToggleShowUrl}
+                    onEdit={() => onEditBookmark(bookmark)}
+                    onDelete={() => onDeleteBookmark(bookmark)}
+                    onToggleShowUrl={() => onToggleShowUrl(bookmark)}
                   />
                 ))}
               </div>
@@ -140,7 +141,7 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 p-0"
-                        onClick={() => onToggleShowUrl(bookmark.id, !bookmark.showFullUrl)}
+                        onClick={() => onToggleShowUrl(bookmark)}
                         title={bookmark.showFullUrl ? "Hide full URL" : "Show full URL"}
                       >
                         <ExternalLink className="h-4 w-4" />
@@ -158,7 +159,7 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                        onClick={() => onDeleteBookmark(bookmark.id)}
+                        onClick={() => onDeleteBookmark(bookmark)}
                         title="Delete bookmark"
                       >
                         <Trash2 className="h-4 w-4" />

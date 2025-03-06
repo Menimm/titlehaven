@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import BookmarkForm from '@/components/BookmarkForm';
@@ -30,7 +31,7 @@ const Index = () => {
     toggleShowUrl 
   } = useBookmarks();
   
-  const { categories } = useCategories();
+  const { categories, addCategory } = useCategories();
   
   const { 
     isFormOpen, 

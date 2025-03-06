@@ -25,7 +25,7 @@ export const useBookmarks = () => {
     return [];
   });
 
-  const [bookmarkToDelete, setBookmarkToDelete] = useState<string | null>(null);
+  const [bookmarkToDelete, setBookmarkToDelete] = useState<Bookmark | null>(null);
 
   // Save to localStorage whenever data changes
   useEffect(() => {
@@ -71,23 +71,23 @@ export const useBookmarks = () => {
     toast.success('Bookmark updated successfully');
   };
 
-  const deleteBookmark = (id: string) => {
-    setBookmarkToDelete(id);
+  const deleteBookmark = (bookmark: Bookmark) => {
+    setBookmarkToDelete(bookmark);
   };
 
   const confirmDeleteBookmark = () => {
     if (bookmarkToDelete) {
-      setBookmarks(bookmarks.filter(b => b.id !== bookmarkToDelete));
+      setBookmarks(bookmarks.filter(b => b.id !== bookmarkToDelete.id));
       toast.success('Bookmark deleted');
       setBookmarkToDelete(null);
     }
   };
 
-  const toggleShowUrl = (id: string, value: boolean) => {
+  const toggleShowUrl = (bookmark: Bookmark) => {
     setBookmarks(bookmarks.map(b => 
-      b.id === id ? { ...b, showFullUrl: value } : b
+      b.id === bookmark.id ? { ...b, showFullUrl: !b.showFullUrl } : b
     ));
-    toast.success(value ? 'Showing full URL' : 'Hiding full URL');
+    toast.success(bookmark.showFullUrl ? 'Hiding full URL' : 'Showing full URL');
   };
 
   const cancelDelete = () => {
