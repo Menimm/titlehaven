@@ -1,38 +1,54 @@
 
 import React from 'react';
-import { Bookmark, Link, PlusCircle, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { PlusCircle, BookOpen, FolderCog, LayoutGrid, List } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface HeaderProps {
   onAddBookmark: () => void;
   bookmarkCount: number;
+  viewMode: 'grid' | 'list';
+  onToggleViewMode: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onAddBookmark, bookmarkCount }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  onAddBookmark, 
+  bookmarkCount, 
+  viewMode, 
+  onToggleViewMode 
+}) => {
   return (
-    <header className="w-full py-6 px-4 sm:px-6 animate-fade-in">
-      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+    <header className="bg-background sticky top-0 border-b z-10">
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <Bookmark className="h-6 w-6" />
-          <h1 className="text-2xl font-semibold tracking-tight">Bookmark Haven</h1>
-          <div className="hidden sm:flex items-center ml-2 px-2 py-1 bg-secondary rounded-full text-xs font-medium">
-            {bookmarkCount} {bookmarkCount === 1 ? 'bookmark' : 'bookmarks'}
-          </div>
+          <BookOpen className="h-6 w-6 text-primary" />
+          <h1 className="text-xl font-bold">Bookmark Haven</h1>
+          <span className="hidden sm:inline-block ml-2 text-sm text-muted-foreground">
+            ({bookmarkCount} bookmark{bookmarkCount !== 1 ? 's' : ''})
+          </span>
         </div>
         
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
-            size="sm" 
-            className={cn(
-              "gap-2 transition-all duration-300", 
-              "hover:bg-primary hover:text-primary-foreground"
-            )}
-            onClick={onAddBookmark}
+            size="sm"
+            onClick={onToggleViewMode}
+            title={viewMode === 'grid' ? "Switch to list view" : "Switch to grid view"}
+            className="mr-2"
           >
+            {viewMode === 'grid' ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+          </Button>
+          
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/categories" className="flex items-center gap-2">
+              <FolderCog className="h-4 w-4" />
+              <span className="hidden sm:inline">Categories</span>
+            </Link>
+          </Button>
+          
+          <Button size="sm" onClick={onAddBookmark} className="flex items-center gap-2">
             <PlusCircle className="h-4 w-4" />
-            <span>Add Bookmark</span>
+            <span className="hidden sm:inline">Add Bookmark</span>
           </Button>
         </div>
       </div>

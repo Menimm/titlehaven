@@ -30,6 +30,25 @@ export const useFoldableSections = (sections: string[]) => {
     }, {} as Record<string, boolean>);
   });
 
+  // Update expandedSections when sections change
+  useEffect(() => {
+    const newExpandedSections = { ...expandedSections };
+    let changed = false;
+    
+    // Add any new sections
+    sections.forEach(section => {
+      if (newExpandedSections[section] === undefined) {
+        newExpandedSections[section] = true; // Default new sections to expanded
+        changed = true;
+      }
+    });
+    
+    // If there were changes, update the state
+    if (changed) {
+      setExpandedSections(newExpandedSections);
+    }
+  }, [sections]);
+
   // Save to localStorage whenever state changes
   useEffect(() => {
     localStorage.setItem('expandedSections', JSON.stringify(expandedSections));
@@ -45,7 +64,7 @@ export const useFoldableSections = (sections: string[]) => {
 
   // Collapse all sections
   const collapseAll = () => {
-    const allCollapsed = Object.keys(expandedSections).reduce((acc, section) => {
+    const allCollapsed = sections.reduce((acc, section) => {
       acc[section] = false;
       return acc;
     }, {} as Record<string, boolean>);
@@ -54,7 +73,7 @@ export const useFoldableSections = (sections: string[]) => {
 
   // Expand all sections
   const expandAll = () => {
-    const allExpanded = Object.keys(expandedSections).reduce((acc, section) => {
+    const allExpanded = sections.reduce((acc, section) => {
       acc[section] = true;
       return acc;
     }, {} as Record<string, boolean>);

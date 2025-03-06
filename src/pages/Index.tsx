@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
 import BookmarkForm from '@/components/BookmarkForm';
 import BookmarkGrid from '@/components/BookmarkGrid';
@@ -13,6 +13,12 @@ import { useBookmarkForm } from '@/hooks/useBookmarkForm';
 import { Bookmark } from '@/lib/types';
 
 const Index = () => {
+  // View mode state (grid or list)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    const savedViewMode = localStorage.getItem('viewMode');
+    return (savedViewMode === 'list' ? 'list' : 'grid') as 'grid' | 'list';
+  });
+
   // Custom hooks
   const { 
     bookmarks, 
@@ -42,6 +48,13 @@ const Index = () => {
     sortedBookmarks 
   } = useSearch(bookmarks);
 
+  // Toggle between grid and list view
+  const toggleViewMode = () => {
+    const newMode = viewMode === 'grid' ? 'list' : 'grid';
+    setViewMode(newMode);
+    localStorage.setItem('viewMode', newMode);
+  };
+
   // Handle save bookmark action (add or update)
   const handleSaveBookmark = (bookmarkData: Omit<Bookmark, 'id' | 'createdAt' | 'favicon'>) => {
     if (editingBookmark) {
@@ -54,7 +67,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header onAddBookmark={openAddForm} bookmarkCount={bookmarks.length} />
+      <Header 
+        onAddBookmark={openAddForm} 
+        bookmarkCount={bookmarks.length}
+        viewMode={viewMode}
+        onToggleViewMode={toggleViewMode}
+      />
       
       <main className="flex-1 container max-w-7xl px-4 sm:px-6 pb-16">
         {bookmarks.length > 0 && (
@@ -80,6 +98,7 @@ const Index = () => {
             onEditBookmark={openEditForm}
             onDeleteBookmark={deleteBookmark}
             onToggleShowUrl={toggleShowUrl}
+            viewMode={viewMode}
             className="mt-8"
           />
         )}
