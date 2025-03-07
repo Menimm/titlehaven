@@ -56,6 +56,11 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
     return category ? category.visible !== false : true;
   };
 
+  // Helper function to handle opening a bookmark URL
+  const handleOpenLink = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   // Filter out hidden categories
   const visibleCategoryIds = categoryIds.filter(isCategoryVisible);
 
@@ -151,8 +156,11 @@ const BookmarkGrid: React.FC<BookmarkGridProps> = ({
                             }}
                           />
                         )}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium truncate">{bookmark.title}</h3>
+                        <div 
+                          className="flex-1 min-w-0 cursor-pointer" 
+                          onClick={() => handleOpenLink(bookmark.url)}
+                        >
+                          <h3 className="font-medium truncate hover:text-primary">{bookmark.title}</h3>
                           <p className="text-xs text-muted-foreground truncate">
                             {bookmark.showFullUrl ? bookmark.url : new URL(bookmark.url).hostname}
                           </p>
