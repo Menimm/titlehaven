@@ -2,24 +2,69 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, Upload, FileText } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { 
+  ArrowLeft, Download, Upload, FileText, 
+  ChevronDown, ChevronUp, Clock, Save, Trash2, Edit, RotateCcw 
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { useCategories } from '@/hooks/useCategories';
 import { useAppSettings } from '@/hooks/useAppSettings';
+import { useFoldableSections } from '@/hooks/useFoldableSections';
+import { useBackupVersions } from '@/hooks/useBackupVersions';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, 
+  DialogDescription, DialogFooter 
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { bookmarks } = useBookmarks();
   const { categories } = useCategories();
   const { settings } = useAppSettings();
+  const { 
+    versions, addVersion, updateVersionName, 
+    deleteVersion, restoreVersion 
+  } = useBackupVersions();
+  
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [manualImportData, setManualImportData] = useState('');
   const [manualImportError, setManualImportError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Advanced editing state
+  const [editJsonData, setEditJsonData] = useState('');
+  const [editJsonDialogOpen, setEditJsonDialogOpen] = useState(false);
+  const [editJsonError, setEditJsonError] = useState('');
+  
+  // Version management state
+  const [versionNameDialogOpen, setVersionNameDialogOpen] = useState(false);
+  const [currentVersionId, setCurrentVersionId] = useState<string | null>(null);
+  const [versionName, setVersionName] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmRestoreId, setConfirmRestoreId] = useState<string | null>(null);
+  
+  // Foldable sections
+  const { expandedSections, toggleSection } = useFoldableSections(['advanced']);
 
   // Create backup data
   const createBackupData = () => {
@@ -141,6 +186,124 @@ const Settings = () => {
     }
   };
 
+  // Advanced section - Edit JSON
+  const handleEditJson = () => {
+    const backupData = createBackupData();
+    setEditJsonData(JSON.stringify(backupData, null, 2));
+    setEditJsonError('');
+    setEditJsonDialogOpen(true);
+  };
+
+  // Save edited JSON
+  const handleSaveEditedJson = () => {
+    try {
+      if (!editJsonData.trim()) {
+        setEditJsonError('Please enter JSON data');
+        return;
+      }
+      
+      processImportData(editJsonData);
+      setEditJsonDialogOpen(false);
+    } catch (error) {
+      console.error('Edit JSON error:', error);
+      setEditJsonError('Invalid JSON format. Please check your data.');
+    }
+  };
+
+  // Save current state as a version
+  const handleSaveVersion = () => {
+    setVersionName(`Backup ${new Date().toLocaleDateString()}`);
+    setVersionNameDialogOpen(true);
+  };
+
+  // Confirm save version
+  const handleConfirmSaveVersion = () => {
+    if (!versionName.trim()) {
+      toast.error('Please enter a name for this version');
+      return;
+    }
+    
+    const backupData = createBackupData().data;
+    addVersion(versionName.trim(), backupData);
+    setVersionNameDialogOpen(false);
+    toast.success(`Version "${versionName}" saved successfully`);
+  };
+
+  // Update version name
+  const handleEditVersionName = (id: string, currentName: string) => {
+    setCurrentVersionId(id);
+    setVersionName(currentName);
+    setVersionNameDialogOpen(true);
+  };
+
+  // Confirm update version name
+  const handleConfirmUpdateVersionName = () => {
+    if (!currentVersionId || !versionName.trim()) {
+      toast.error('Please enter a name for this version');
+      return;
+    }
+    
+    updateVersionName(currentVersionId, versionName.trim());
+    setVersionNameDialogOpen(false);
+    setCurrentVersionId(null);
+    toast.success('Version name updated successfully');
+  };
+
+  // Download a specific version
+  const handleDownloadVersion = (version: any) => {
+    try {
+      const jsonData = JSON.stringify({
+        version: 1,
+        timestamp: version.timestamp,
+        data: version.data
+      }, null, 2);
+      
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `bookmark-haven-${version.name.replace(/\s+/g, '-')}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success(`Version "${version.name}" exported successfully`);
+    } catch (error) {
+      console.error('Version export error:', error);
+      toast.error('Failed to export version');
+    }
+  };
+
+  // Delete version confirmation
+  const handleConfirmDelete = () => {
+    if (confirmDeleteId) {
+      deleteVersion(confirmDeleteId);
+      setConfirmDeleteId(null);
+      toast.success('Version deleted successfully');
+    }
+  };
+
+  // Restore version confirmation
+  const handleConfirmRestore = () => {
+    if (confirmRestoreId) {
+      const restoredVersion = restoreVersion(confirmRestoreId);
+      setConfirmRestoreId(null);
+      
+      if (restoredVersion) {
+        toast.success(`Version "${restoredVersion.name}" restored successfully. Refreshing app...`);
+        
+        // Reload the page to apply the restored data
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        toast.error('Failed to restore version');
+      }
+    }
+  };
+
   return (
     <div 
       className="min-h-screen"
@@ -225,6 +388,114 @@ const Settings = () => {
           </Alert>
         </div>
         
+        {/* Advanced Section - Foldable */}
+        <div className="bg-card rounded-lg border shadow p-6 mb-8">
+          <button
+            className="w-full flex items-center justify-between"
+            onClick={() => toggleSection('advanced')}
+          >
+            <h2 className="text-xl font-semibold">Advanced Options</h2>
+            {expandedSections['advanced'] ? (
+              <ChevronUp className="h-5 w-5" />
+            ) : (
+              <ChevronDown className="h-5 w-5" />
+            )}
+          </button>
+          
+          {expandedSections['advanced'] && (
+            <div className="mt-4 space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Manual JSON Editing</h3>
+                <p className="text-sm text-muted-foreground">
+                  Edit your bookmarks and settings directly as JSON. Use with caution!
+                </p>
+                <Button 
+                  onClick={handleEditJson}
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  Edit Current Data as JSON
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Version Management</h3>
+                  <Button
+                    onClick={handleSaveVersion}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    Save Current Version
+                  </Button>
+                </div>
+                
+                <p className="text-sm text-muted-foreground">
+                  Save multiple versions of your bookmarks and easily switch between them.
+                </p>
+                
+                {versions.length === 0 ? (
+                  <div className="text-center p-4 border border-dashed rounded-md">
+                    <p className="text-muted-foreground">No saved versions yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {versions.map(version => (
+                      <div 
+                        key={version.id} 
+                        className="p-3 border rounded-md flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">{version.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(version.timestamp).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <span className="sr-only">Actions</span>
+                              <ChevronDown className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => handleEditVersionName(version.id, version.name)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Rename
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDownloadVersion(version)}>
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setConfirmRestoreId(version.id)}>
+                              <RotateCcw className="h-4 w-4 mr-2" />
+                              Restore
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => setConfirmDeleteId(version.id)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        
         <div className="bg-card rounded-lg border shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Data Format</h2>
           <p className="text-sm text-muted-foreground mb-4">
@@ -299,6 +570,131 @@ const Settings = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Edit JSON Dialog */}
+      <Dialog open={editJsonDialogOpen} onOpenChange={setEditJsonDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Edit Data as JSON</DialogTitle>
+            <DialogDescription>
+              Modify your bookmarks and settings directly as JSON. Be careful with your changes.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Textarea 
+              value={editJsonData}
+              onChange={(e) => {
+                setEditJsonData(e.target.value);
+                setEditJsonError('');
+              }}
+              placeholder="Edit JSON data here..."
+              className="min-h-[400px] font-mono text-sm"
+            />
+            {editJsonError && (
+              <p className="text-destructive text-sm mt-2">{editJsonError}</p>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditJsonDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEditedJson}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Version Name Dialog */}
+      <Dialog open={versionNameDialogOpen} onOpenChange={setVersionNameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{currentVersionId ? 'Rename Version' : 'Save Version'}</DialogTitle>
+            <DialogDescription>
+              {currentVersionId 
+                ? 'Enter a new name for this version.'
+                : 'Give your version a descriptive name to help you identify it later.'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Input
+              value={versionName}
+              onChange={(e) => setVersionName(e.target.value)}
+              placeholder="Version name"
+              className="w-full"
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setVersionNameDialogOpen(false);
+                setCurrentVersionId(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={currentVersionId ? handleConfirmUpdateVersionName : handleConfirmSaveVersion}
+            >
+              {currentVersionId ? 'Update Name' : 'Save Version'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Version Confirmation */}
+      <AlertDialog 
+        open={confirmDeleteId !== null} 
+        onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Version</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this version? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmDeleteId(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Restore Version Confirmation */}
+      <AlertDialog 
+        open={confirmRestoreId !== null} 
+        onOpenChange={(open) => !open && setConfirmRestoreId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore Version</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to restore this version? This will replace all your current bookmarks, categories, and settings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmRestoreId(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmRestore}>
+              Restore
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

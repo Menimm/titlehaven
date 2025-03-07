@@ -1,4 +1,3 @@
-
 export interface Bookmark {
   id: string;
   title: string;
@@ -22,4 +21,16 @@ export interface Category {
 export interface AppSettings {
   backgroundColor?: string;
   // Add other app-wide settings here as needed
+}
+
+// Backup types
+export interface BackupVersion {
+  id: string;
+  name: string;
+  timestamp: string;
+  data: {
+    bookmarks: Bookmark[];
+    categories: Category[];
+    settings: AppSettings;
+  };
 }
