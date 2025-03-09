@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -49,7 +48,6 @@ const Categories = () => {
   const handleDeleteCategory = () => {
     if (!categoryToDelete) return;
     
-    // Get bookmarks to update their category if they use the deleted one
     const savedBookmarks = localStorage.getItem('bookmarks');
     if (savedBookmarks) {
       try {
@@ -58,7 +56,7 @@ const Categories = () => {
           if (bookmark.category === categoryToDelete.id) {
             return {
               ...bookmark,
-              category: 'default' // Move to default category
+              category: 'default'
             };
           }
           return bookmark;
@@ -77,7 +75,8 @@ const Categories = () => {
 
   const handleToggleVisibility = (category: Category) => {
     toggleCategoryVisibility(category.id);
-    toast.success(`Category ${category.visible ? 'hidden' : 'shown'}`);
+    const newState = categories.find(c => c.id === category.id)?.visible ? 'hidden' : 'shown';
+    toast.success(`Category ${newState}`);
   };
 
   const handleSetCategoryColor = (categoryId: string, color: string) => {
@@ -97,7 +96,6 @@ const Categories = () => {
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
     
-    // Update order property for all items
     const updatedItems = items.map((item, index) => ({
       ...item,
       order: index
@@ -273,7 +271,6 @@ const Categories = () => {
           )}
         </div>
 
-        {/* Edit Category Dialog */}
         <AlertDialog open={!!editingCategory} onOpenChange={(open) => !open && setEditingCategory(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -301,7 +298,6 @@ const Categories = () => {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Delete Category Dialog */}
         <AlertDialog open={!!categoryToDelete} onOpenChange={(open) => !open && setCategoryToDelete(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>

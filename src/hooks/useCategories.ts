@@ -50,9 +50,14 @@ export const useCategories = () => {
   };
 
   const toggleCategoryVisibility = (id: string) => {
-    setCategories(categories.map(cat => 
-      cat.id === id ? { ...cat, visible: !cat.visible } : cat
-    ));
+    setCategories(categories.map(cat => {
+      if (cat.id === id) {
+        // Debug log to verify current state before toggling
+        console.log(`Toggling category ${id} from ${cat.visible} to ${!cat.visible}`);
+        return { ...cat, visible: !cat.visible };
+      }
+      return cat;
+    }));
   };
 
   const setCategoryColor = (id: string, color: string) => {
