@@ -1,3 +1,4 @@
+
 export interface Bookmark {
   id: string;
   title: string;
@@ -7,6 +8,7 @@ export interface Bookmark {
   favicon?: string;
   createdAt: Date;
   showFullUrl?: boolean;
+  color?: string; // For bookmark background color
 }
 
 export interface Category {
@@ -20,6 +22,7 @@ export interface Category {
 // Add an interface for app settings
 export interface AppSettings {
   backgroundColor?: string;
+  theme?: 'light' | 'dark' | 'system'; // Theme setting
   // Add other app-wide settings here as needed
 }
 

@@ -48,24 +48,28 @@ sudo apt-get install -y nodejs
    ```
 5. The script will:
    - Check for compatible Node.js version
+   - Check for existing bookmarks and offer to create a backup
    - Build the application
    - Ask you to choose between 'serve' package or NGINX
+   - For NGINX: ask for a hostname to use in the server_name directive
    - Set up your chosen server option
    - For systemd service: enable the service to start on boot and start it immediately
    - For NGINX: configure a site and reload NGINX
+   - Offer to restore from backup if one was created
 
 ## Accessing the Application
 
 After installation, you can access Bookmark Haven at:
 - With 'serve' package: `http://your-server-ip:8080`
-- With NGINX: `http://your-server-ip/`
+- With NGINX: `http://your-hostname/` (where hostname is what you specified during setup)
 
 ## Using NGINX
 
 If you choose the NGINX option during installation, the script will:
 1. Install NGINX if not already installed
-2. Create a site configuration in `/etc/nginx/sites-available/bookmark-haven`
-3. Enable the site and reload NGINX
+2. Prompt you for a hostname to use in the server_name directive
+3. Create a site configuration in `/etc/nginx/sites-available/bookmark-haven`
+4. Enable the site and reload NGINX
 
 You can further customize your NGINX configuration by editing the site file:
 ```
@@ -79,6 +83,14 @@ sudo nano /etc/nginx/sites-available/bookmark-haven
 - Stop: `sudo systemctl stop bookmark-haven.service`
 - Disable autostart: `sudo systemctl disable bookmark-haven.service`
 - View logs: `sudo journalctl -u bookmark-haven.service`
+
+## Backup and Restore
+
+During installation, the script will check for existing data and offer to create a backup file.
+To restore from a backup:
+1. Open Bookmark Haven in your browser
+2. Go to Settings → Backup and Restore
+3. Use the "Import from File" option and select your backup file
 
 ## Manual Installation
 

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -9,6 +9,7 @@ interface ColorPickerProps {
   onChange: (color: string) => void;
   className?: string;
   label?: string;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 const PRESET_COLORS = [
@@ -27,19 +28,87 @@ const PRESET_COLORS = [
   '#E0F7FA', // Light Cyan
   '#FFF8E1', // Light Amber
   '#F1F8E9', // Light Lime
+
+  // Adding darker colors for better contrast in dark mode
+  '#121212', // Almost Black
+  '#212121', // Dark Gray
+  '#323232', // Medium Dark Gray
+  '#454545', // Medium Gray
+  '#1A237E', // Deep Indigo
+  '#311B92', // Deep Purple
+  '#880E4F', // Deep Pink
+  '#B71C1C', // Deep Red
+  '#004D40', // Deep Teal
+  '#0D47A1', // Deep Blue
+  '#F57F17', // Deep Orange
+  '#33691E', // Deep Green
 ];
 
 const ColorPicker: React.FC<ColorPickerProps> = ({ 
   color, 
   onChange, 
   className,
-  label = "Select Color" 
+  label = "Select Color",
+  size = 'md'
 }) => {
   const [open, setOpen] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [selectedColor, setSelectedColor] = useState(color || '#FFFFFF');
+  const colorPaletteRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setSelectedColor(color || '#FFFFFF');
+  }, [color]);
+
+  // Handle pointer events for drag selection
+  useEffect(() => {
+    if (!dragging) return;
+    
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!dragging || !colorPaletteRef.current) return;
+      
+      // Find the element under the pointer
+      const element = document.elementFromPoint(e.clientX, e.clientY);
+      if (element && element.classList.contains('color-preset')) {
+        const newColor = element.getAttribute('data-color');
+        if (newColor && newColor !== selectedColor) {
+          setSelectedColor(newColor);
+          onChange(newColor);
+        }
+      }
+    };
+    
+    const handlePointerUp = () => {
+      setDragging(false);
+    };
+    
+    // Add listeners to window to catch events outside the component
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [dragging, onChange, selectedColor]);
 
   const handleColorSelect = (newColor: string) => {
     onChange(newColor);
-    setOpen(false);
+    setSelectedColor(newColor);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent, color: string) => {
+    e.preventDefault();
+    setDragging(true);
+    handleColorSelect(color);
+  };
+
+  const getSizeClasses = () => {
+    switch (size) {
+      case 'sm': return 'w-8 h-8';
+      case 'lg': return 'w-12 h-12';
+      default: return 'w-10 h-10';
+    }
   };
 
   return (
@@ -50,23 +119,29 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
           <Button 
             variant="outline" 
             size="sm" 
-            className="w-10 h-10 p-0 border-2"
-            style={{ backgroundColor: color || '#FFFFFF' }}
+            className={cn(getSizeClasses(), "p-0 border-2")}
+            style={{ backgroundColor: selectedColor }}
           >
             <span className="sr-only">Open color picker</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-64">
-          <div className="grid grid-cols-5 gap-2">
+          <div 
+            ref={colorPaletteRef}
+            className="grid grid-cols-8 gap-1"
+          >
             {PRESET_COLORS.map((presetColor) => (
               <button
                 key={presetColor}
                 className={cn(
-                  "w-8 h-8 rounded-md border border-gray-300 cursor-pointer",
-                  color === presetColor && "ring-2 ring-primary"
+                  "color-preset w-6 h-6 rounded-md border border-gray-300 cursor-pointer touch-none",
+                  selectedColor === presetColor && "ring-2 ring-primary"
                 )}
                 style={{ backgroundColor: presetColor }}
+                data-color={presetColor}
+                onPointerDown={(e) => handlePointerDown(e, presetColor)}
                 onClick={() => handleColorSelect(presetColor)}
+                aria-label={`Select color ${presetColor}`}
               />
             ))}
           </div>
@@ -74,7 +149,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
             <label className="block text-sm mb-1">Custom Color</label>
             <input
               type="color"
-              value={color || '#FFFFFF'}
+              value={selectedColor}
               onChange={(e) => handleColorSelect(e.target.value)}
               className="w-full h-8 cursor-pointer"
             />

@@ -56,15 +56,15 @@ export const useBookmarks = () => {
 
   const updateBookmark = (
     id: string, 
-    bookmarkData: Omit<Bookmark, 'id' | 'createdAt' | 'favicon'>
+    bookmarkData: Partial<Omit<Bookmark, 'id' | 'createdAt' | 'favicon'>>
   ) => {
     setBookmarks(bookmarks.map(b => 
       b.id === id 
         ? { 
             ...b, 
-            ...bookmarkData, 
-            showFullUrl: b.showFullUrl,
-            favicon: getFaviconForUrl(bookmarkData.url)
+            ...bookmarkData,
+            // Only update favicon if URL has changed
+            favicon: bookmarkData.url ? getFaviconForUrl(bookmarkData.url) : b.favicon
           } 
         : b
     ));
@@ -90,6 +90,13 @@ export const useBookmarks = () => {
     toast.success(bookmark.showFullUrl ? 'Hiding full URL' : 'Showing full URL');
   };
 
+  const setBookmarkColor = (id: string, color: string) => {
+    setBookmarks(bookmarks.map(b => 
+      b.id === id ? { ...b, color } : b
+    ));
+    toast.success('Bookmark color updated');
+  };
+
   const cancelDelete = () => {
     setBookmarkToDelete(null);
   };
@@ -102,6 +109,7 @@ export const useBookmarks = () => {
     deleteBookmark,
     confirmDeleteBookmark,
     cancelDelete,
-    toggleShowUrl
+    toggleShowUrl,
+    setBookmarkColor
   };
 };

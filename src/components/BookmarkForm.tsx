@@ -1,171 +1,239 @@
 
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import React, { useEffect, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Bookmark, Category } from '@/lib/types';
+import ColorPicker from '@/components/ColorPicker';
+
+// Schema for form validation
+const bookmarkSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  url: z
+    .string()
+    .min(1, 'URL is required')
+    .url('Must be a valid URL'),
+  description: z.string().optional(),
+  category: z.string().min(1, 'Category is required'),
+  color: z.string().optional(),
+});
+
+type BookmarkFormValues = z.infer<typeof bookmarkSchema>;
 
 interface BookmarkFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (bookmark: Omit<Bookmark, 'id' | 'createdAt' | 'favicon'>) => void;
-  editingBookmark?: Bookmark;
   categories: Category[];
-  onAddCategory: (name: string) => void;
+  existingBookmark?: Bookmark;
+  onSubmit: (values: BookmarkFormValues) => void;
+  onCancel: () => void;
 }
 
-const BookmarkForm: React.FC<BookmarkFormProps> = ({ 
-  isOpen, 
-  onClose, 
-  onSave, 
-  editingBookmark,
+const BookmarkForm: React.FC<BookmarkFormProps> = ({
   categories,
-  onAddCategory
+  existingBookmark,
+  onSubmit,
+  onCancel,
 }) => {
-  const [title, setTitle] = useState('');
-  const [url, setUrl] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [newCategory, setNewCategory] = useState('');
-  const [showCategoryInput, setShowCategoryInput] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
-  // Reset form when dialog opens or editing bookmark changes
+  // Set up form with default values
+  const form = useForm<BookmarkFormValues>({
+    resolver: zodResolver(bookmarkSchema),
+    defaultValues: {
+      title: '',
+      url: '',
+      description: '',
+      category: categories[0]?.id || '',
+      color: '',
+    },
+  });
+
+  // Update form when editing an existing bookmark
   useEffect(() => {
-    if (isOpen) {
-      if (editingBookmark) {
-        setTitle(editingBookmark.title);
-        setUrl(editingBookmark.url);
-        setDescription(editingBookmark.description || '');
-        setCategory(editingBookmark.category);
-      } else {
-        setTitle('');
-        setUrl('');
-        setDescription('');
-        setCategory(categories.length > 0 ? categories[0].id : '');
-      }
-      setNewCategory('');
-      setShowCategoryInput(false);
+    if (existingBookmark) {
+      setIsEditMode(true);
+      form.reset({
+        title: existingBookmark.title,
+        url: existingBookmark.url,
+        description: existingBookmark.description || '',
+        category: existingBookmark.category,
+        color: existingBookmark.color || '',
+      });
+    } else {
+      setIsEditMode(false);
     }
-  }, [isOpen, editingBookmark, categories]);
+  }, [existingBookmark, form]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate URL format
-    let formattedUrl = url;
-    if (!/^https?:\/\//i.test(formattedUrl)) {
-      formattedUrl = 'https://' + formattedUrl;
+  // Try to extract title from URL
+  const extractTitleFromUrl = (url: string) => {
+    try {
+      const domain = new URL(url).hostname;
+      const parts = domain.split('.');
+      if (parts.length >= 2) {
+        // Get the domain name without the TLD
+        return parts[parts.length - 2].charAt(0).toUpperCase() + parts[parts.length - 2].slice(1);
+      }
+      return domain;
+    } catch {
+      return '';
     }
-    
-    onSave({
-      title: title.trim(),
-      url: formattedUrl,
-      description: description.trim(),
-      category
-    });
   };
 
-  const handleAddCategory = () => {
-    if (newCategory.trim()) {
-      onAddCategory(newCategory.trim());
-      setCategory(newCategory.trim());
-      setNewCategory('');
-      setShowCategoryInput(false);
+  // Auto-fill title when URL is entered
+  const handleUrlChange = (url: string) => {
+    form.setValue('url', url);
+    
+    if (!isEditMode && !form.getValues('title') && url) {
+      const extractedTitle = extractTitleFromUrl(url);
+      if (extractedTitle) {
+        form.setValue('title', extractedTitle);
+      }
     }
+  };
+
+  const handleFormSubmit = (values: BookmarkFormValues) => {
+    onSubmit(values);
+    form.reset();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px] animate-fade-in">
-        <DialogHeader>
-          <DialogTitle>{editingBookmark ? 'Edit Bookmark' : 'Add New Bookmark'}</DialogTitle>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="url">URL</Label>
-            <Input 
-              id="url" 
-              value={url} 
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="Enter website URL"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input 
-              id="title" 
-              value={title} 
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter bookmark title"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
-            <Textarea 
-              id="description" 
-              value={description} 
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter a short description"
-              rows={3}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            
-            {showCategoryInput ? (
-              <div className="flex gap-2">
-                <Input 
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  placeholder="New category name"
-                  className="flex-1"
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>URL*</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="https://example.com"
+                  {...field}
+                  onChange={(e) => handleUrlChange(e.target.value)}
                 />
-                <Button type="button" onClick={handleAddCategory}>Add</Button>
-                <Button type="button" variant="outline" onClick={() => setShowCategoryInput(false)}>
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <div className="flex gap-2">
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="flex-1">
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title*</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter title" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Enter description (optional)"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category*</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setShowCategoryInput(true)}
-                >
-                  New
-                </Button>
-              </div>
-            )}
-          </div>
-          
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit">{editingBookmark ? 'Update' : 'Add'} Bookmark</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+                </FormControl>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="color"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Bookmark Color</FormLabel>
+              <FormControl>
+                <div className="flex items-center gap-2">
+                  <ColorPicker 
+                    color={field.value} 
+                    onChange={field.onChange}
+                    label=""
+                  />
+                  {field.value && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => field.onChange('')}
+                    >
+                      Reset
+                    </Button>
+                  )}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit">
+            {isEditMode ? 'Update' : 'Add'} Bookmark
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };
 
