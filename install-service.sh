@@ -10,6 +10,19 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
+# Check Node.js version
+NODE_VERSION=$(node -v | cut -d 'v' -f 2)
+NODE_MAJOR=$(echo $NODE_VERSION | cut -d '.' -f 1)
+
+if [ "$NODE_MAJOR" -lt 14 ]; then
+  echo "Error: Node.js version 14 or higher is required for this application"
+  echo "Current version: v$NODE_VERSION"
+  echo "Please upgrade Node.js before continuing."
+  echo "Recommended: use nvm (Node Version Manager) or install from NodeSource"
+  echo "Instructions: https://nodejs.org/en/download/package-manager/"
+  exit 1
+fi
+
 # Get the current username (the user who ran sudo)
 ACTUAL_USER=$(logname || echo $SUDO_USER)
 
@@ -69,23 +82,30 @@ EOF
 else
   # Create the service file for 'serve'
   echo "Creating systemd service file for serve..."
-  SERVICE_FILE="$SCRIPT_DIR/bookmark-haven.service"
+  
+  # Create a temporary service file
+  cat > "$SCRIPT_DIR/bookmark-haven.service" <<EOF
+[Unit]
+Description=Bookmark Haven web application
+After=network.target
 
-  # Replace placeholders in the service file
-  sed -i "s|User=YOUR_USERNAME|User=$ACTUAL_USER|g" "$SERVICE_FILE"
-  sed -i "s|WorkingDirectory=/path/to/your/bookmark-haven|WorkingDirectory=$SCRIPT_DIR|g" "$SERVICE_FILE"
+[Service]
+Type=simple
+User=$ACTUAL_USER
+WorkingDirectory=$SCRIPT_DIR
+ExecStart=$(which npx) serve -s $SCRIPT_DIR/dist -l 8080
+Restart=on-failure
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=bookmark-haven
+
+[Install]
+WantedBy=multi-user.target
+EOF
 
   # Copy the service file to systemd directory
-  cp "$SERVICE_FILE" /etc/systemd/system/
-
-  # Install serve globally if not already installed
-  if ! command -v serve &> /dev/null; then
-      echo "Installing 'serve' package globally..."
-      npm install -g serve
-  fi
-
-  # Update the service file to use global serve command
-  sed -i "s|ExecStart=/usr/bin/npm run start|ExecStart=$(which serve) -s $SCRIPT_DIR/dist -l 8080|g" /etc/systemd/system/bookmark-haven.service
+  cp "$SCRIPT_DIR/bookmark-haven.service" /etc/systemd/system/
 
   # Reload systemd to recognize the new service
   systemctl daemon-reload
@@ -106,4 +126,3 @@ if [ "$server_choice" == "1" ]; then
   echo "  sudo systemctl stop bookmark-haven.service    - Stop the service"
   echo "  sudo systemctl disable bookmark-haven.service - Disable autostart"
 fi
-

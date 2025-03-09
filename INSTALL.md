@@ -6,8 +6,33 @@ This guide will help you set up Bookmark Haven to run automatically when your Ub
 ## Prerequisites
 
 - Ubuntu Linux (or any systemd-based distribution)
-- Node.js and npm installed
+- Node.js v14 or higher (required for Vite)
+- npm installed
 - sudo privileges
+
+## Node.js Version Check
+
+If you encounter errors like:
+```
+SyntaxError: Unexpected reserved word
+```
+when trying to install, it's likely you're using an older version of Node.js. The installation script will check your Node.js version and prompt you to upgrade if needed.
+
+To check your Node.js version manually:
+```
+node -v
+```
+
+If you need to upgrade, we recommend using NVM (Node Version Manager) or installing from NodeSource:
+```
+# Using NVM (recommended)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+nvm install --lts
+
+# Or using NodeSource
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
 
 ## Installation Steps
 
@@ -22,6 +47,7 @@ This guide will help you set up Bookmark Haven to run automatically when your Ub
    sudo ./install-service.sh
    ```
 5. The script will:
+   - Check for compatible Node.js version
    - Build the application
    - Ask you to choose between 'serve' package or NGINX
    - Set up your chosen server option
@@ -77,4 +103,3 @@ server {
     }
 }
 ```
-
