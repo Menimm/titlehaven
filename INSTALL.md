@@ -23,18 +23,30 @@ This guide will help you set up Bookmark Haven to run automatically when your Ub
    ```
 5. The script will:
    - Build the application
-   - Create a systemd service
-   - Enable the service to start on boot
-   - Start the service immediately
+   - Ask you to choose between 'serve' package or NGINX
+   - Set up your chosen server option
+   - For systemd service: enable the service to start on boot and start it immediately
+   - For NGINX: configure a site and reload NGINX
 
 ## Accessing the Application
 
 After installation, you can access Bookmark Haven at:
+- With 'serve' package: `http://your-server-ip:8080`
+- With NGINX: `http://your-server-ip/`
+
+## Using NGINX
+
+If you choose the NGINX option during installation, the script will:
+1. Install NGINX if not already installed
+2. Create a site configuration in `/etc/nginx/sites-available/bookmark-haven`
+3. Enable the site and reload NGINX
+
+You can further customize your NGINX configuration by editing the site file:
 ```
-http://your-server-ip:8080
+sudo nano /etc/nginx/sites-available/bookmark-haven
 ```
 
-## Managing the Service
+## Managing the Systemd Service (if using 'serve')
 
 - Check status: `sudo systemctl status bookmark-haven.service`
 - Restart: `sudo systemctl restart bookmark-haven.service`
@@ -47,10 +59,22 @@ http://your-server-ip:8080
 If you prefer to set up the service manually:
 
 1. Build the application: `npm install && npm run build`
-2. Install serve globally: `npm install -g serve`
-3. Edit the `bookmark-haven.service` file:
-   - Update the User field to your username
-   - Update the WorkingDirectory to the full path of the project
-4. Copy the service file: `sudo cp bookmark-haven.service /etc/systemd/system/`
-5. Reload systemd: `sudo systemctl daemon-reload`
-6. Enable and start: `sudo systemctl enable bookmark-haven.service && sudo systemctl start bookmark-haven.service`
+2. Choose your preferred server:
+   - With 'serve': `npm install -g serve && serve -s dist -l 8080`
+   - With NGINX: Configure NGINX to serve the `dist` directory
+
+For NGINX manual setup, create a site configuration:
+```
+server {
+    listen 80;
+    server_name your-domain.com;
+    
+    root /path/to/bookmark-haven/dist;
+    index index.html;
+    
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
