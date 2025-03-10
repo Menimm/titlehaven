@@ -47,6 +47,7 @@ const BookmarkColorPicker: React.FC<BookmarkColorPickerProps> = ({
           size="sm"
           className="h-8 w-8 p-0"
           onClick={stopPropagation}
+          onPointerDown={stopPropagation}
         >
           <Palette className="h-4 w-4" />
           <span className="sr-only">Change bookmark color</span>
@@ -55,7 +56,6 @@ const BookmarkColorPicker: React.FC<BookmarkColorPickerProps> = ({
       <DropdownMenuContent 
         align="end"
         onClick={stopPropagation}
-        onPointerDown={stopPropagation}
         onPointerDownOutside={(e) => {
           if (e.target && (
             (e.target as HTMLElement).closest('.color-preset') || 
