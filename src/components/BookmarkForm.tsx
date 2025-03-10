@@ -83,8 +83,18 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
       });
     } else {
       setIsEditMode(false);
+      // Only reset when opening form in add mode
+      if (isOpen && !isEditMode) {
+        form.reset({
+          title: '',
+          url: '',
+          description: '',
+          category: categories[0]?.id || '',
+          color: '',
+        });
+      }
     }
-  }, [editingBookmark, form]);
+  }, [editingBookmark, form, isOpen, isEditMode, categories]);
 
   // Try to extract title from URL
   const extractTitleFromUrl = (url: string) => {
@@ -120,7 +130,18 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent 
+        className="sm:max-w-[500px]"
+        onPointerDownOutside={(e) => {
+          // Prevent close when clicking inside color picker elements
+          if (e.target && (
+              (e.target as HTMLElement).closest('.color-preset') || 
+              (e.target as HTMLElement).closest('[role="dialog"]')
+            )) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit' : 'Add'} Bookmark</DialogTitle>
         </DialogHeader>
@@ -211,7 +232,7 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
                 <FormItem>
                   <FormLabel>Bookmark Color</FormLabel>
                   <FormControl>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                       <ColorPicker 
                         color={field.value} 
                         onChange={field.onChange}
@@ -222,7 +243,10 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
                           type="button" 
                           variant="outline" 
                           size="sm" 
-                          onClick={() => field.onChange('')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            field.onChange('');
+                          }}
                         >
                           Reset
                         </Button>

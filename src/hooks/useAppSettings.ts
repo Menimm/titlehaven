@@ -3,70 +3,69 @@ import { useState, useEffect } from 'react';
 import { AppSettings } from '@/lib/types';
 
 export const useAppSettings = () => {
-  const [settings, setSettings] = useState<AppSettings>(() => {
+  const [settings, setSettings] = useState<AppSettings | null>(() => {
     const saved = localStorage.getItem('appSettings');
     if (saved) {
       try {
         return JSON.parse(saved);
       } catch (e) {
         console.error('Failed to parse app settings from localStorage', e);
-        return { theme: 'system' };
+        return createDefaultSettings();
       }
     }
-    return { theme: 'system' };
+    // Return default settings if none exist
+    return createDefaultSettings();
   });
 
-  // On mount, apply theme based on settings or system preference
-  useEffect(() => {
-    applyTheme(settings.theme || 'system');
-  }, []);
+  // Create default settings object
+  function createDefaultSettings(): AppSettings {
+    return {
+      backgroundColor: undefined,
+      theme: 'system'
+    };
+  }
 
-  // Save to localStorage whenever settings change
+  // Save settings to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('appSettings', JSON.stringify(settings));
-    
-    // Apply theme changes
-    if (settings.theme) {
-      applyTheme(settings.theme);
+    if (settings) {
+      localStorage.setItem('appSettings', JSON.stringify(settings));
     }
   }, [settings]);
 
-  const applyTheme = (theme: 'light' | 'dark' | 'system') => {
-    const isDark = 
-      theme === 'dark' || 
-      (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  // Set background color
+  const setBackgroundColor = (color: string) => {
+    setSettings(prev => ({
+      ...prev || createDefaultSettings(),
+      backgroundColor: color
+    }));
+  };
+
+  // Set theme
+  const setTheme = (theme: 'light' | 'dark' | 'system') => {
+    setSettings(prev => ({
+      ...prev || createDefaultSettings(),
+      theme
+    }));
+
+    // Update the document with the theme data attribute
+    const html = document.documentElement;
+    html.setAttribute('data-theme', theme);
     
-    if (isDark) {
-      document.documentElement.classList.add('dark');
+    // If system theme, detect and set based on system preference
+    if (theme === 'system') {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      html.classList.toggle('dark', isDark);
     } else {
-      document.documentElement.classList.remove('dark');
+      html.classList.toggle('dark', theme === 'dark');
     }
   };
 
-  const setBackgroundColor = (color: string) => {
-    setSettings(prev => ({ ...prev, backgroundColor: color }));
-  };
-
-  const setTheme = (theme: 'light' | 'dark' | 'system') => {
-    setSettings(prev => ({ ...prev, theme }));
-  };
-
-  // Listen for system theme changes if using system theme
+  // Initialize theme on first load
   useEffect(() => {
-    if (settings.theme !== 'system') return;
-    
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    const handleChange = () => {
-      applyTheme('system');
-    };
-    
-    mediaQuery.addEventListener('change', handleChange);
-    
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
-  }, [settings.theme]);
+    if (settings?.theme) {
+      setTheme(settings.theme);
+    }
+  }, []);
 
   return {
     settings,

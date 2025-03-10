@@ -92,13 +92,20 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
     };
   }, [dragging, onChange, selectedColor]);
 
-  const handleColorSelect = (newColor: string) => {
+  const handleColorSelect = (newColor: string, e?: React.MouseEvent) => {
+    // If there's an event, prevent propagation to stop dialog closing
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     onChange(newColor);
     setSelectedColor(newColor);
   };
 
   const handlePointerDown = (e: React.PointerEvent, color: string) => {
     e.preventDefault();
+    e.stopPropagation();
     setDragging(true);
     handleColorSelect(color);
   };
@@ -125,10 +132,11 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
             <span className="sr-only">Open color picker</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-64">
+        <PopoverContent className="w-64" onClick={(e) => e.stopPropagation()}>
           <div 
             ref={colorPaletteRef}
             className="grid grid-cols-8 gap-1"
+            onMouseDown={(e) => e.stopPropagation()}
           >
             {PRESET_COLORS.map((presetColor) => (
               <button
@@ -140,18 +148,22 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
                 style={{ backgroundColor: presetColor }}
                 data-color={presetColor}
                 onPointerDown={(e) => handlePointerDown(e, presetColor)}
-                onClick={() => handleColorSelect(presetColor)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleColorSelect(presetColor, e);
+                }}
                 aria-label={`Select color ${presetColor}`}
               />
             ))}
           </div>
-          <div className="mt-3">
+          <div className="mt-3" onMouseDown={(e) => e.stopPropagation()}>
             <label className="block text-sm mb-1">Custom Color</label>
             <input
               type="color"
               value={selectedColor}
               onChange={(e) => handleColorSelect(e.target.value)}
               className="w-full h-8 cursor-pointer"
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
         </PopoverContent>
