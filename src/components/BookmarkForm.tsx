@@ -128,19 +128,28 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
     form.reset();
   };
 
+  const handleColorChange = (color: string) => {
+    form.setValue('color', color);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={(open) => !open && onClose()}
+    >
       <DialogContent 
         className="sm:max-w-[500px]"
         onPointerDownOutside={(e) => {
           // Prevent close when clicking inside color picker elements
           if (e.target && (
               (e.target as HTMLElement).closest('.color-preset') || 
+              (e.target as HTMLElement).closest('input[type="color"]') ||
               (e.target as HTMLElement).closest('[role="dialog"]')
             )) {
             e.preventDefault();
           }
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit' : 'Add'} Bookmark</DialogTitle>
@@ -232,10 +241,13 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
                 <FormItem>
                   <FormLabel>Bookmark Color</FormLabel>
                   <FormControl>
-                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <div 
+                      className="flex items-center gap-2" 
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <ColorPicker 
                         color={field.value} 
-                        onChange={field.onChange}
+                        onChange={handleColorChange}
                         label=""
                       />
                       {field.value && (

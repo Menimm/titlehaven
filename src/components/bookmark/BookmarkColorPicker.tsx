@@ -28,7 +28,9 @@ const BookmarkColorPicker: React.FC<BookmarkColorPickerProps> = ({
     setBookmarkColor(bookmarkId, color);
   };
 
-  const handleClearColor = () => {
+  const handleClearColor = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setBookmarkColor(bookmarkId, '');
   };
 
@@ -39,15 +41,29 @@ const BookmarkColorPicker: React.FC<BookmarkColorPickerProps> = ({
           variant="ghost" 
           size="sm"
           className="h-8 w-8 p-0"
+          onClick={(e) => e.stopPropagation()}
         >
           <Palette className="h-4 w-4" />
           <span className="sr-only">Change bookmark color</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent 
+        align="end"
+        onPointerDownOutside={(e) => {
+          if (e.target && (
+            (e.target as HTMLElement).closest('.color-preset') || 
+            (e.target as HTMLElement).closest('[role="dialog"]')
+          )) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DropdownMenuLabel>Bookmark Color</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <div className="p-2">
+        <div 
+          className="p-2"
+          onClick={(e) => e.stopPropagation()}
+        >
           <ColorPicker
             color={currentColor}
             onChange={handleColorChange}

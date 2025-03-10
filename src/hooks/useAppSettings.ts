@@ -3,11 +3,12 @@ import { useState, useEffect } from 'react';
 import { AppSettings } from '@/lib/types';
 
 export const useAppSettings = () => {
-  const [settings, setSettings] = useState<AppSettings | null>(() => {
+  const [settings, setSettings] = useState<AppSettings>(() => {
     const saved = localStorage.getItem('appSettings');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsedSettings = JSON.parse(saved);
+        return { ...createDefaultSettings(), ...parsedSettings };
       } catch (e) {
         console.error('Failed to parse app settings from localStorage', e);
         return createDefaultSettings();
@@ -20,22 +21,20 @@ export const useAppSettings = () => {
   // Create default settings object
   function createDefaultSettings(): AppSettings {
     return {
-      backgroundColor: undefined,
+      backgroundColor: '',
       theme: 'system'
     };
   }
 
   // Save settings to localStorage whenever they change
   useEffect(() => {
-    if (settings) {
-      localStorage.setItem('appSettings', JSON.stringify(settings));
-    }
+    localStorage.setItem('appSettings', JSON.stringify(settings));
   }, [settings]);
 
   // Set background color
   const setBackgroundColor = (color: string) => {
     setSettings(prev => ({
-      ...prev || createDefaultSettings(),
+      ...prev,
       backgroundColor: color
     }));
   };
@@ -43,7 +42,7 @@ export const useAppSettings = () => {
   // Set theme
   const setTheme = (theme: 'light' | 'dark' | 'system') => {
     setSettings(prev => ({
-      ...prev || createDefaultSettings(),
+      ...prev,
       theme
     }));
 

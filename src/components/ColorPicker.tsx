@@ -118,8 +118,17 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
     }
   };
 
+  // Prevent propagation on the entire component
+  const stopPropagation = (e: React.MouseEvent | React.PointerEvent) => {
+    e.stopPropagation();
+  };
+
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div 
+      className={cn("flex items-center gap-2", className)} 
+      onClick={stopPropagation}
+      onPointerDown={stopPropagation}
+    >
       {label && <span className="text-sm">{label}</span>}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -128,15 +137,21 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
             size="sm" 
             className={cn(getSizeClasses(), "p-0 border-2")}
             style={{ backgroundColor: selectedColor }}
+            onClick={stopPropagation}
           >
             <span className="sr-only">Open color picker</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-64" onClick={(e) => e.stopPropagation()}>
+        <PopoverContent 
+          className="w-64" 
+          onClick={stopPropagation}
+          onPointerDown={stopPropagation}
+        >
           <div 
             ref={colorPaletteRef}
             className="grid grid-cols-8 gap-1"
-            onMouseDown={(e) => e.stopPropagation()}
+            onClick={stopPropagation}
+            onPointerDown={stopPropagation}
           >
             {PRESET_COLORS.map((presetColor) => (
               <button
@@ -156,14 +171,21 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
               />
             ))}
           </div>
-          <div className="mt-3" onMouseDown={(e) => e.stopPropagation()}>
+          <div 
+            className="mt-3" 
+            onClick={stopPropagation}
+            onPointerDown={stopPropagation}
+          >
             <label className="block text-sm mb-1">Custom Color</label>
             <input
               type="color"
               value={selectedColor}
-              onChange={(e) => handleColorSelect(e.target.value)}
+              onChange={(e) => {
+                e.stopPropagation();
+                handleColorSelect(e.target.value);
+              }}
+              onClick={stopPropagation}
               className="w-full h-8 cursor-pointer"
-              onClick={(e) => e.stopPropagation()}
             />
           </div>
         </PopoverContent>
