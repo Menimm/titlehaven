@@ -164,6 +164,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
                 data-color={presetColor}
                 onPointerDown={(e) => handlePointerDown(e, presetColor)}
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   handleColorSelect(presetColor, e);
                 }}
@@ -181,10 +182,12 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
               type="color"
               value={selectedColor}
               onChange={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 handleColorSelect(e.target.value);
               }}
               onClick={stopPropagation}
+              onPointerDown={stopPropagation}
               className="w-full h-8 cursor-pointer"
             />
           </div>

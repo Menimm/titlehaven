@@ -132,6 +132,11 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
     form.setValue('color', color);
   };
 
+  // Prevent propagation to avoid closing dialogs
+  const stopPropagation = (e: React.MouseEvent | React.PointerEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <Dialog 
       open={isOpen} 
@@ -139,6 +144,8 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
     >
       <DialogContent 
         className="sm:max-w-[500px]"
+        onClick={stopPropagation}
+        onPointerDown={stopPropagation}
         onPointerDownOutside={(e) => {
           // Prevent close when clicking inside color picker elements
           if (e.target && (
@@ -149,7 +156,6 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
             e.preventDefault();
           }
         }}
-        onClick={(e) => e.stopPropagation()}
       >
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit' : 'Add'} Bookmark</DialogTitle>
@@ -243,7 +249,8 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
                   <FormControl>
                     <div 
                       className="flex items-center gap-2" 
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={stopPropagation}
+                      onPointerDown={stopPropagation}
                     >
                       <ColorPicker 
                         color={field.value} 
@@ -256,6 +263,7 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
                           variant="outline" 
                           size="sm" 
                           onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             field.onChange('');
                           }}

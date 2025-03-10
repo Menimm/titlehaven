@@ -9,6 +9,7 @@ interface CategoryHeaderProps {
   bookmarkCount: number;
   isExpanded: boolean;
   onToggle: (categoryId: string) => void;
+  textColor?: string;
 }
 
 const CategoryHeader: React.FC<CategoryHeaderProps> = ({
@@ -17,6 +18,7 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({
   bookmarkCount,
   isExpanded,
   onToggle,
+  textColor = 'inherit',
 }) => {
   return (
     <div 
@@ -27,6 +29,7 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({
         variant="ghost"
         size="sm"
         className="p-1 mr-2 h-8 w-8"
+        style={{ color: textColor }}
         aria-label={isExpanded ? "Collapse section" : "Expand section"}
       >
         {isExpanded ? 
@@ -34,8 +37,16 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({
           <ChevronDown className="h-5 w-5" />
         }
       </Button>
-      <h2 className="text-xl font-semibold">{categoryName}</h2>
-      <span className="ml-2 text-sm text-muted-foreground">
+      <h2 
+        className="text-xl font-semibold"
+        style={{ color: textColor }}
+      >
+        {categoryName}
+      </h2>
+      <span 
+        className="ml-2 text-sm"
+        style={{ color: textColor === 'inherit' ? 'var(--muted-foreground)' : textColor }}
+      >
         ({bookmarkCount})
       </span>
     </div>

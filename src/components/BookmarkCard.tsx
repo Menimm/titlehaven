@@ -7,6 +7,7 @@ import BookmarkCardBody from '@/components/bookmark/BookmarkCardBody';
 import BookmarkCardFooter from '@/components/bookmark/BookmarkCardFooter';
 import BookmarkCardMenu from '@/components/bookmark/BookmarkCardMenu';
 import BookmarkColorPicker from '@/components/bookmark/BookmarkColorPicker';
+import { getContrastColor } from '@/lib/utils';
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
@@ -28,12 +29,16 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
     window.open(bookmark.url, '_blank', 'noopener,noreferrer');
   };
 
+  // Determine text color based on background color
+  const textColor = bookmark.color ? getContrastColor(bookmark.color) : 'inherit';
+
   return (
     <Card 
       className="relative flex flex-col h-full overflow-hidden transition-all hover:shadow-md"
       style={{ 
         backgroundColor: bookmark.color || '',
         borderColor: bookmark.color ? 'transparent' : undefined,
+        color: textColor,
       }}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
@@ -48,6 +53,7 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
           onEdit={() => onEdit(bookmark)} 
           onDelete={() => onDelete(bookmark)} 
           onToggleShowUrl={() => onToggleShowUrl(bookmark)} 
+          textColor={textColor}
         />
       </div>
       
@@ -56,14 +62,17 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
         onEdit={() => onEdit(bookmark)} 
         onDelete={() => onDelete(bookmark)} 
         onToggleShowUrl={() => onToggleShowUrl(bookmark)} 
+        textColor={textColor}
       />
       <BookmarkCardBody 
         bookmark={bookmark} 
         onOpenLink={handleOpenLink}
+        textColor={textColor}
       />
       <BookmarkCardFooter 
         isHovering={isHovering}
         onOpenLink={handleOpenLink}
+        textColor={textColor}
       />
     </Card>
   );

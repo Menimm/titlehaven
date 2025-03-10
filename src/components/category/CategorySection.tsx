@@ -4,6 +4,7 @@ import { Bookmark, Category } from '@/lib/types';
 import BookmarkCard from '@/components/BookmarkCard';
 import CategoryHeader from './CategoryHeader';
 import BookmarkListItem from '@/components/bookmark/BookmarkListItem';
+import { getContrastColor } from '@/lib/utils';
 
 interface CategorySectionProps {
   categoryId: string;
@@ -35,11 +36,17 @@ const CategorySection: React.FC<CategorySectionProps> = ({
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  // Determine the text color based on background color
+  const textColor = categoryColor ? getContrastColor(categoryColor) : 'inherit';
+
   return (
     <section 
       key={categoryId} 
       className="animate-fade-in border rounded-lg p-4"
-      style={{ backgroundColor: categoryColor || '' }}
+      style={{ 
+        backgroundColor: categoryColor || '',
+        color: textColor
+      }}
     >
       <CategoryHeader
         categoryId={categoryId}
@@ -47,6 +54,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({
         bookmarkCount={bookmarks.length}
         isExpanded={isExpanded}
         onToggle={onToggleSection}
+        textColor={textColor}
       />
       
       {isExpanded && (

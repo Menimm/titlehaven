@@ -34,6 +34,11 @@ const BookmarkColorPicker: React.FC<BookmarkColorPickerProps> = ({
     setBookmarkColor(bookmarkId, '');
   };
 
+  // Stop propagation to prevent closing dialogs
+  const stopPropagation = (e: React.MouseEvent | React.PointerEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -41,7 +46,7 @@ const BookmarkColorPicker: React.FC<BookmarkColorPickerProps> = ({
           variant="ghost" 
           size="sm"
           className="h-8 w-8 p-0"
-          onClick={(e) => e.stopPropagation()}
+          onClick={stopPropagation}
         >
           <Palette className="h-4 w-4" />
           <span className="sr-only">Change bookmark color</span>
@@ -49,10 +54,13 @@ const BookmarkColorPicker: React.FC<BookmarkColorPickerProps> = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="end"
+        onClick={stopPropagation}
+        onPointerDown={stopPropagation}
         onPointerDownOutside={(e) => {
           if (e.target && (
             (e.target as HTMLElement).closest('.color-preset') || 
-            (e.target as HTMLElement).closest('[role="dialog"]')
+            (e.target as HTMLElement).closest('[role="dialog"]') ||
+            (e.target as HTMLElement).closest('input[type="color"]')
           )) {
             e.preventDefault();
           }
@@ -62,7 +70,8 @@ const BookmarkColorPicker: React.FC<BookmarkColorPickerProps> = ({
         <DropdownMenuSeparator />
         <div 
           className="p-2"
-          onClick={(e) => e.stopPropagation()}
+          onClick={stopPropagation}
+          onPointerDown={stopPropagation}
         >
           <ColorPicker
             color={currentColor}
