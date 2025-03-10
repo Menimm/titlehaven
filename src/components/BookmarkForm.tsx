@@ -23,6 +23,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Bookmark, Category } from '@/lib/types';
 import ColorPicker from '@/components/ColorPicker';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Schema for form validation
 const bookmarkSchema = z.object({
@@ -40,16 +41,20 @@ type BookmarkFormValues = z.infer<typeof bookmarkSchema>;
 
 interface BookmarkFormProps {
   categories: Category[];
-  existingBookmark?: Bookmark;
-  onSubmit: (values: BookmarkFormValues) => void;
-  onCancel: () => void;
+  editingBookmark?: Bookmark;
+  onSave: (values: BookmarkFormValues) => void;
+  onClose: () => void;
+  onAddCategory: (name: string) => string;
+  isOpen: boolean;
 }
 
 const BookmarkForm: React.FC<BookmarkFormProps> = ({
   categories,
-  existingBookmark,
-  onSubmit,
-  onCancel,
+  editingBookmark,
+  onSave,
+  onClose,
+  onAddCategory,
+  isOpen
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -67,19 +72,19 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
 
   // Update form when editing an existing bookmark
   useEffect(() => {
-    if (existingBookmark) {
+    if (editingBookmark) {
       setIsEditMode(true);
       form.reset({
-        title: existingBookmark.title,
-        url: existingBookmark.url,
-        description: existingBookmark.description || '',
-        category: existingBookmark.category,
-        color: existingBookmark.color || '',
+        title: editingBookmark.title,
+        url: editingBookmark.url,
+        description: editingBookmark.description || '',
+        category: editingBookmark.category,
+        color: editingBookmark.color || '',
       });
     } else {
       setIsEditMode(false);
     }
-  }, [existingBookmark, form]);
+  }, [editingBookmark, form]);
 
   // Try to extract title from URL
   const extractTitleFromUrl = (url: string) => {
@@ -109,131 +114,138 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
   };
 
   const handleFormSubmit = (values: BookmarkFormValues) => {
-    onSubmit(values);
+    onSave(values);
     form.reset();
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="url"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>URL*</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="https://example.com"
-                  {...field}
-                  onChange={(e) => handleUrlChange(e.target.value)}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>{isEditMode ? 'Edit' : 'Add'} Bookmark</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL*</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="https://example.com"
+                      {...field}
+                      onChange={(e) => handleUrlChange(e.target.value)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Title*</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter title" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title*</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter title" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Enter description (optional)"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter description (optional)"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category*</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                value={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category*</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="color"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bookmark Color</FormLabel>
-              <FormControl>
-                <div className="flex items-center gap-2">
-                  <ColorPicker 
-                    color={field.value} 
-                    onChange={field.onChange}
-                    label=""
-                  />
-                  {field.value && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => field.onChange('')}
-                    >
-                      Reset
-                    </Button>
-                  )}
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="color"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Bookmark Color</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center gap-2">
+                      <ColorPicker 
+                        color={field.value} 
+                        onChange={field.onChange}
+                        label=""
+                      />
+                      {field.value && (
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => field.onChange('')}
+                        >
+                          Reset
+                        </Button>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            {isEditMode ? 'Update' : 'Add'} Bookmark
-          </Button>
-        </div>
-      </form>
-    </Form>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                {isEditMode ? 'Update' : 'Add'} Bookmark
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 };
 

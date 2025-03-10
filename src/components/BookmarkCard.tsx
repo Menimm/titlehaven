@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Bookmark } from '@/lib/types';
 import BookmarkCardHeader from '@/components/bookmark/BookmarkCardHeader';
@@ -21,6 +21,13 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
   onDelete,
   onToggleShowUrl,
 }) => {
+  const [isHovering, setIsHovering] = useState(false);
+  
+  // Helper function to handle opening a bookmark URL
+  const handleOpenLink = () => {
+    window.open(bookmark.url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <Card 
       className="relative flex flex-col h-full overflow-hidden transition-all hover:shadow-md"
@@ -28,6 +35,8 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
         backgroundColor: bookmark.color || '',
         borderColor: bookmark.color ? 'transparent' : undefined,
       }}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
     >
       <div className="absolute top-1 right-1 flex gap-1">
         <BookmarkColorPicker 
@@ -36,15 +45,26 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
         />
         <BookmarkCardMenu 
           bookmark={bookmark} 
-          onEdit={onEdit} 
-          onDelete={onDelete} 
-          onToggleShowUrl={onToggleShowUrl} 
+          onEdit={() => onEdit(bookmark)} 
+          onDelete={() => onDelete(bookmark)} 
+          onToggleShowUrl={() => onToggleShowUrl(bookmark)} 
         />
       </div>
       
-      <BookmarkCardHeader bookmark={bookmark} />
-      <BookmarkCardBody bookmark={bookmark} />
-      <BookmarkCardFooter bookmark={bookmark} />
+      <BookmarkCardHeader 
+        bookmark={bookmark} 
+        onEdit={() => onEdit(bookmark)} 
+        onDelete={() => onDelete(bookmark)} 
+        onToggleShowUrl={() => onToggleShowUrl(bookmark)} 
+      />
+      <BookmarkCardBody 
+        bookmark={bookmark} 
+        onOpenLink={handleOpenLink}
+      />
+      <BookmarkCardFooter 
+        isHovering={isHovering}
+        onOpenLink={handleOpenLink}
+      />
     </Card>
   );
 };

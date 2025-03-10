@@ -2,10 +2,6 @@
 import React from 'react';
 import { Bookmark } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { MoreHorizontal } from 'lucide-react';
-import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import BookmarkCardMenu from './BookmarkCardMenu';
 
 interface BookmarkCardHeaderProps {
   bookmark: Bookmark;
@@ -15,10 +11,7 @@ interface BookmarkCardHeaderProps {
 }
 
 const BookmarkCardHeader: React.FC<BookmarkCardHeaderProps> = ({
-  bookmark,
-  onEdit,
-  onDelete,
-  onToggleShowUrl
+  bookmark
 }) => {
   const getFaviconUrl = (url: string) => {
     try {
@@ -48,20 +41,6 @@ const BookmarkCardHeader: React.FC<BookmarkCardHeaderProps> = ({
           {bookmark.category}
         </Badge>
       </div>
-      
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <BookmarkCardMenu 
-          bookmark={bookmark}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onToggleShowUrl={onToggleShowUrl}
-        />
-      </DropdownMenu>
     </div>
   );
 };
