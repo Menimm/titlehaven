@@ -7,11 +7,13 @@ import { cn } from '@/lib/utils';
 interface BookmarkCardFooterProps {
   isHovering: boolean;
   onOpenLink: () => void;
+  textColor?: string;
 }
 
 const BookmarkCardFooter: React.FC<BookmarkCardFooterProps> = ({
   isHovering,
-  onOpenLink
+  onOpenLink,
+  textColor = 'inherit'
 }) => {
   return (
     <div className={cn(
@@ -23,6 +25,7 @@ const BookmarkCardFooter: React.FC<BookmarkCardFooterProps> = ({
         size="sm"
         className="h-8"
         onClick={onOpenLink}
+        style={{ color: textColor }}
       >
         <ExternalLink className="h-3.5 w-3.5 mr-1" />
         Open

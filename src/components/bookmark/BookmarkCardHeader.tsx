@@ -8,10 +8,12 @@ interface BookmarkCardHeaderProps {
   onEdit: () => void;
   onDelete: () => void;
   onToggleShowUrl: () => void;
+  textColor?: string;
 }
 
 const BookmarkCardHeader: React.FC<BookmarkCardHeaderProps> = ({
-  bookmark
+  bookmark,
+  textColor = 'inherit'
 }) => {
   const getFaviconUrl = (url: string) => {
     try {
@@ -37,7 +39,7 @@ const BookmarkCardHeader: React.FC<BookmarkCardHeaderProps> = ({
             />
           )}
         </div>
-        <Badge variant="outline" className="text-xs font-normal">
+        <Badge variant="outline" className="text-xs font-normal" style={{ color: textColor }}>
           {bookmark.category}
         </Badge>
       </div>

@@ -14,6 +14,7 @@ interface BookmarkCardMenuProps {
   onEdit: () => void;
   onDelete: () => void;
   onToggleShowUrl: () => void;
+  textColor?: string;
 }
 
 const BookmarkCardMenu: React.FC<BookmarkCardMenuProps> = ({
