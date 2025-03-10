@@ -71,6 +71,7 @@ const Index = () => {
 
   // Handle add bookmark action
   const handleAddBookmark = () => {
+    console.log("Opening add bookmark form");
     openAddForm();
   };
 
