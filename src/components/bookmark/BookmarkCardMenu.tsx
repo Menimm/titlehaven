@@ -15,12 +15,14 @@ interface BookmarkCardMenuProps {
   onEdit: () => void;
   onDelete: () => void;
   onToggleShowUrl: () => void;
+  textColor?: string;
 }
 
 const BookmarkCardMenu: React.FC<BookmarkCardMenuProps> = ({
   onEdit,
   onDelete,
   onToggleShowUrl,
+  textColor,
 }) => {
   return (
     <DropdownMenu>
@@ -29,6 +31,7 @@ const BookmarkCardMenu: React.FC<BookmarkCardMenuProps> = ({
           variant="ghost" 
           className="h-8 w-8 p-0"
           onClick={(e) => e.preventDefault()}
+          style={{ color: textColor }}
         >
           <MoreHorizontal className="h-4 w-4" />
           <span className="sr-only">Open menu</span>
