@@ -29,7 +29,12 @@ export const useBookmarks = () => {
 
   // Save to localStorage whenever data changes
   useEffect(() => {
-    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+    try {
+      localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+    } catch (err) {
+      console.error('Failed to save bookmarks to localStorage', err);
+      toast.error('Failed to save bookmarks');
+    }
   }, [bookmarks]);
 
   const getFaviconForUrl = (url: string) => {
@@ -42,33 +47,44 @@ export const useBookmarks = () => {
   };
 
   const addBookmark = (bookmarkData: Omit<Bookmark, 'id' | 'createdAt' | 'favicon'>) => {
-    const newBookmark: Bookmark = {
-      id: generateId(),
-      ...bookmarkData,
-      favicon: getFaviconForUrl(bookmarkData.url),
-      createdAt: new Date(),
-      showFullUrl: false
-    };
-    setBookmarks([...bookmarks, newBookmark]);
-    toast.success('Bookmark added successfully');
-    return newBookmark;
+    try {
+      const newBookmark: Bookmark = {
+        id: generateId(),
+        ...bookmarkData,
+        favicon: getFaviconForUrl(bookmarkData.url),
+        createdAt: new Date(),
+        showFullUrl: false
+      };
+      setBookmarks(prevBookmarks => [...prevBookmarks, newBookmark]);
+      toast.success('Bookmark added successfully');
+      return newBookmark;
+    } catch (err) {
+      console.error('Failed to add bookmark', err);
+      toast.error('Failed to add bookmark');
+      return null;
+    }
   };
 
   const updateBookmark = (
     id: string, 
     bookmarkData: Partial<Omit<Bookmark, 'id' | 'createdAt' | 'favicon'>>
   ) => {
-    setBookmarks(bookmarks.map(b => 
-      b.id === id 
-        ? { 
-            ...b, 
-            ...bookmarkData,
-            // Only update favicon if URL has changed
-            favicon: bookmarkData.url ? getFaviconForUrl(bookmarkData.url) : b.favicon
-          } 
-        : b
-    ));
-    toast.success('Bookmark updated successfully');
+    try {
+      setBookmarks(bookmarks.map(b => 
+        b.id === id 
+          ? { 
+              ...b, 
+              ...bookmarkData,
+              // Only update favicon if URL has changed
+              favicon: bookmarkData.url ? getFaviconForUrl(bookmarkData.url) : b.favicon
+            } 
+          : b
+      ));
+      toast.success('Bookmark updated successfully');
+    } catch (err) {
+      console.error('Failed to update bookmark', err);
+      toast.error('Failed to update bookmark');
+    }
   };
 
   const deleteBookmark = (bookmark: Bookmark) => {
@@ -77,24 +93,39 @@ export const useBookmarks = () => {
 
   const confirmDeleteBookmark = () => {
     if (bookmarkToDelete) {
-      setBookmarks(bookmarks.filter(b => b.id !== bookmarkToDelete.id));
-      toast.success('Bookmark deleted');
-      setBookmarkToDelete(null);
+      try {
+        setBookmarks(bookmarks.filter(b => b.id !== bookmarkToDelete.id));
+        toast.success('Bookmark deleted');
+        setBookmarkToDelete(null);
+      } catch (err) {
+        console.error('Failed to delete bookmark', err);
+        toast.error('Failed to delete bookmark');
+      }
     }
   };
 
   const toggleShowUrl = (bookmark: Bookmark) => {
-    setBookmarks(bookmarks.map(b => 
-      b.id === bookmark.id ? { ...b, showFullUrl: !b.showFullUrl } : b
-    ));
-    toast.success(bookmark.showFullUrl ? 'Hiding full URL' : 'Showing full URL');
+    try {
+      setBookmarks(bookmarks.map(b => 
+        b.id === bookmark.id ? { ...b, showFullUrl: !b.showFullUrl } : b
+      ));
+      toast.success(bookmark.showFullUrl ? 'Hiding full URL' : 'Showing full URL');
+    } catch (err) {
+      console.error('Failed to toggle URL visibility', err);
+      toast.error('Failed to update bookmark');
+    }
   };
 
   const setBookmarkColor = (id: string, color: string) => {
-    setBookmarks(bookmarks.map(b => 
-      b.id === id ? { ...b, color } : b
-    ));
-    toast.success('Bookmark color updated');
+    try {
+      setBookmarks(bookmarks.map(b => 
+        b.id === id ? { ...b, color } : b
+      ));
+      toast.success('Bookmark color updated');
+    } catch (err) {
+      console.error('Failed to update bookmark color', err);
+      toast.error('Failed to update bookmark color');
+    }
   };
 
   const cancelDelete = () => {

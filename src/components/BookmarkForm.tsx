@@ -57,6 +57,7 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
   isOpen
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
+  const [preventClose, setPreventClose] = useState(false);
 
   // Set up form with default values
   const form = useForm<BookmarkFormValues>({
@@ -137,25 +138,27 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
     e.stopPropagation();
   };
 
+  // Set up handlers for color picker interactions
+  const handleColorPickerMouseDown = () => {
+    setPreventClose(true);
+  };
+
+  const handleColorPickerMouseUp = () => {
+    setTimeout(() => setPreventClose(false), 100);
+  };
+
   return (
     <Dialog 
       open={isOpen} 
-      onOpenChange={(open) => !open && onClose()}
+      onOpenChange={(open) => {
+        if (!open && !preventClose) {
+          onClose();
+        }
+      }}
     >
       <DialogContent 
         className="sm:max-w-[500px]"
         onClick={stopPropagation}
-        onPointerDown={stopPropagation}
-        onPointerDownOutside={(e) => {
-          // Prevent close when clicking inside color picker elements
-          if (e.target && (
-              (e.target as HTMLElement).closest('.color-preset') || 
-              (e.target as HTMLElement).closest('input[type="color"]') ||
-              (e.target as HTMLElement).closest('[role="dialog"]')
-            )) {
-            e.preventDefault();
-          }
-        }}
       >
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit' : 'Add'} Bookmark</DialogTitle>
@@ -249,8 +252,8 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
                   <FormControl>
                     <div 
                       className="flex items-center gap-2" 
-                      onClick={stopPropagation}
-                      onPointerDown={stopPropagation}
+                      onMouseDown={handleColorPickerMouseDown}
+                      onMouseUp={handleColorPickerMouseUp}
                     >
                       <ColorPicker 
                         color={field.value} 

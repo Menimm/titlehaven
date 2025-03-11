@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +23,8 @@ const BookmarkColorPicker: React.FC<BookmarkColorPickerProps> = ({
   currentColor 
 }) => {
   const { setBookmarkColor } = useBookmarks();
+  const [open, setOpen] = useState(false);
+  const [preventClose, setPreventClose] = useState(false);
 
   const handleColorChange = (color: string) => {
     setBookmarkColor(bookmarkId, color);
@@ -39,8 +41,25 @@ const BookmarkColorPicker: React.FC<BookmarkColorPickerProps> = ({
     e.stopPropagation();
   };
 
+  // Handle color picker interactions
+  const handleColorPickerMouseDown = () => {
+    setPreventClose(true);
+  };
+
+  const handleColorPickerMouseUp = () => {
+    setTimeout(() => setPreventClose(false), 100);
+  };
+
   return (
-    <DropdownMenu>
+    <DropdownMenu 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        if (!isOpen && preventClose) {
+          return;
+        }
+        setOpen(isOpen);
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
@@ -57,6 +76,11 @@ const BookmarkColorPicker: React.FC<BookmarkColorPickerProps> = ({
         align="end"
         onClick={stopPropagation}
         onPointerDownOutside={(e) => {
+          if (preventClose) {
+            e.preventDefault();
+            return;
+          }
+          
           if (e.target && (
             (e.target as HTMLElement).closest('.color-preset') || 
             (e.target as HTMLElement).closest('[role="dialog"]') ||
@@ -71,7 +95,8 @@ const BookmarkColorPicker: React.FC<BookmarkColorPickerProps> = ({
         <div 
           className="p-2"
           onClick={stopPropagation}
-          onPointerDown={stopPropagation}
+          onMouseDown={handleColorPickerMouseDown}
+          onMouseUp={handleColorPickerMouseUp}
         >
           <ColorPicker
             color={currentColor}
