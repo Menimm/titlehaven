@@ -78,15 +78,6 @@ const BookmarkColorPicker: React.FC<BookmarkColorPickerProps> = ({
         onPointerDownOutside={(e) => {
           if (preventClose) {
             e.preventDefault();
-            return;
-          }
-          
-          if (e.target && (
-            (e.target as HTMLElement).closest('.color-preset') || 
-            (e.target as HTMLElement).closest('[role="dialog"]') ||
-            (e.target as HTMLElement).closest('input[type="color"]')
-          )) {
-            e.preventDefault();
           }
         }}
       >
