@@ -1,57 +1,57 @@
 
 import React from 'react';
-import { Bookmark } from '@/lib/types';
-import { toast } from 'sonner';
-import { 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator 
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Copy, Pencil, Trash2, Link } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Link2 } from 'lucide-react';
+import { Bookmark } from '@/lib/types';
 
 interface BookmarkCardMenuProps {
   bookmark: Bookmark;
   onEdit: () => void;
   onDelete: () => void;
   onToggleShowUrl: () => void;
-  textColor?: string;
 }
 
 const BookmarkCardMenu: React.FC<BookmarkCardMenuProps> = ({
-  bookmark,
   onEdit,
   onDelete,
-  onToggleShowUrl
+  onToggleShowUrl,
 }) => {
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(bookmark.url);
-    toast.success('Link copied to clipboard');
-  };
-
   return (
-    <DropdownMenuContent align="end">
-      <DropdownMenuItem onClick={onEdit}>
-        <Pencil className="h-4 w-4 mr-2" />
-        Edit
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={handleCopyLink}>
-        <Copy className="h-4 w-4 mr-2" />
-        Copy Link
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={onToggleShowUrl}>
-        <Link className="h-4 w-4 mr-2" />
-        {bookmark.showFullUrl ? "Hide Full URL" : "Show Full URL"}
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem 
-        onClick={onDelete}
-        className="text-destructive focus:text-destructive"
-      >
-        <Trash2 className="h-4 w-4 mr-2" />
-        Delete
-      </DropdownMenuItem>
-    </DropdownMenuContent>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button 
+          variant="ghost" 
+          className="h-8 w-8 p-0"
+          onClick={(e) => e.preventDefault()}
+        >
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={onEdit}>
+          <Edit className="mr-2 h-4 w-4" />
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onToggleShowUrl}>
+          <Link2 className="mr-2 h-4 w-4" />
+          Toggle URL
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          onClick={onDelete}
+          className="text-red-600"
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
