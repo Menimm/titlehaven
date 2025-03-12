@@ -29,7 +29,7 @@ const BookmarkCardBody: React.FC<BookmarkCardBodyProps> = ({
       {bookmark.description && (
         <p 
           className="text-sm line-clamp-2 mb-2"
-          style={{ color: textColor === 'inherit' ? 'var(--foreground)' : textColor }}
+          style={{ color: textColor }}
         >
           {bookmark.description}
         </p>
@@ -39,7 +39,7 @@ const BookmarkCardBody: React.FC<BookmarkCardBodyProps> = ({
         <div 
           className="text-xs break-all p-2 rounded mt-2 mb-2"
           style={{ 
-            color: textColor === 'inherit' ? 'var(--foreground)' : textColor,
+            color: textColor,
             backgroundColor: textColor === 'white' ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)'
           }}
         >
@@ -48,7 +48,7 @@ const BookmarkCardBody: React.FC<BookmarkCardBodyProps> = ({
       ) : (
         <div 
           className="text-xs truncate"
-          style={{ color: textColor === 'inherit' ? 'var(--foreground)' : textColor }}
+          style={{ color: textColor }}
         >
           {bookmark.url.replace(/^https?:\/\//i, '')}
         </div>
