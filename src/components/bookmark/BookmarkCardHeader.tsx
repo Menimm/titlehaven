@@ -39,7 +39,14 @@ const BookmarkCardHeader: React.FC<BookmarkCardHeaderProps> = ({
             />
           )}
         </div>
-        <Badge variant="outline" className="text-xs font-normal" style={{ color: textColor }}>
+        <Badge 
+          variant="outline" 
+          className="text-xs font-normal"
+          style={{ 
+            color: textColor,
+            borderColor: textColor === 'inherit' ? undefined : `${textColor}50`
+          }}
+        >
           {bookmark.category}
         </Badge>
       </div>

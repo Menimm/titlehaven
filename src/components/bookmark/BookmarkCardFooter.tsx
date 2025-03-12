@@ -25,7 +25,10 @@ const BookmarkCardFooter: React.FC<BookmarkCardFooterProps> = ({
         size="sm"
         className="h-8"
         onClick={onOpenLink}
-        style={{ color: textColor }}
+        style={{ 
+          color: textColor,
+          borderColor: textColor === 'inherit' ? undefined : textColor
+        }}
       >
         <ExternalLink className="h-3.5 w-3.5 mr-1" />
         Open
