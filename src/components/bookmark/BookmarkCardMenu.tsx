@@ -19,10 +19,11 @@ interface BookmarkCardMenuProps {
 }
 
 const BookmarkCardMenu: React.FC<BookmarkCardMenuProps> = ({
+  bookmark,
   onEdit,
   onDelete,
   onToggleShowUrl,
-  textColor,
+  textColor = 'inherit',
 }) => {
   return (
     <DropdownMenu>
